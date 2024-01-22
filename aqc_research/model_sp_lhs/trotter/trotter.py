@@ -350,12 +350,12 @@ def trotter_circuit(
 
     def _trotter_block(k: int, params: np.ndarray):
         qc.rz(-np.pi / 2, k + 1)
-        qc.cnot(k + 1, k)
+        qc.cx(k + 1, k)
         qc.rz(params[0], k)
         qc.ry(params[1], k + 1)
-        qc.cnot(k, k + 1)
+        qc.cx(k, k + 1)
         qc.ry(params[2], k + 1)
-        qc.cnot(k + 1, k)
+        qc.cx(k + 1, k)
         qc.rz(np.pi / 2, k)
 
     # Compute Trotter parameters. In case of 2nd order, the first and the trail

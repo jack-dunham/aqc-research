@@ -138,7 +138,7 @@ def run_jobs(
         for i, c in enumerate(configs):
             results.append(_job_function_wrapper(i, c, seed, job_function))
     else:
-        results = Parallel(n_jobs=num_jobs, prefer="processes")(
+        results = Parallel(n_jobs=num_jobs, prefer="threads")(
             delayed(_job_function_wrapper)(i, c, seed, job_function) for i, c in enumerate(configs)
         )
 

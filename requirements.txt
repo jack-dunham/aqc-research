@@ -6,3 +6,4 @@ scikit-learn
 pandas
 jupyter
 qiskit
+qiskit-aer
