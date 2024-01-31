@@ -56,6 +56,7 @@ class Trotter:
         evol_time: float,
         num_steps: int,
         delta: float = 1.0,
+        field: float = 0.0,
         second_order: bool,
     ):
         """
@@ -64,6 +65,7 @@ class Trotter:
             evol_time: evolution time.
             num_steps: number of Trotter steps (full layers).
             delta: parameter of corresponding Hamiltonian - scale of z-terms.
+            field: parameter of corresponding Hamiltonian - external field strength.
             second_order: True, if the 2nd order Trotter is intended.
         """
         assert chk.is_int(num_qubits, num_qubits >= 2)
@@ -76,6 +78,7 @@ class Trotter:
         self._evol_time = evol_time
         self._num_trotter_steps = num_steps
         self._delta = delta
+        self._field = field
         self._dt = evol_time / float(num_steps)
         self._second_order = second_order
 
@@ -116,6 +119,7 @@ class Trotter:
             qc=qc_ini,
             dt=self._dt,
             delta=self._delta,
+            field=self._field,
             num_trotter_steps=self._num_trotter_steps,
             second_order=self._second_order,
         )
@@ -146,6 +150,7 @@ class Trotter:
             ini_state,
             dt=self._dt,
             delta=self._delta,
+            field=self._field,
             num_trotter_steps=self._num_trotter_steps,
             second_order=self._second_order,
         )
@@ -174,13 +179,14 @@ class Trotter:
             ini_state,
             dt=self._dt,
             delta=self._delta,
+            field=self._field,
             num_trotter_steps=self._num_trotter_steps,
             second_order=self._second_order,
         )
         return mpsop.mps_from_circuit(qc, trunc_thr=trunc_thr, out_state=out_state)
 
 
-def make_hamiltonian(num_qubits: int, delta: float) -> np.ndarray:
+def make_hamiltonian(num_qubits: int, delta: float, field: float = 0.0) -> np.ndarray:
     """
     Makes a Hamiltonian matrix. This function is used only for testing to ensure
     generated Trotterized ansatz is consistent with Hamiltonian.
@@ -193,6 +199,7 @@ def make_hamiltonian(num_qubits: int, delta: float) -> np.ndarray:
     Args:
         num_qubits: number of qubits.
         delta: parameter of the Hamiltonian - scaling factor of z-terms.
+        field: parameter of the Hamiltonian - external field strength.
 
     Returns:
         Hamiltonian matrix.
@@ -226,8 +233,9 @@ def make_hamiltonian(num_qubits: int, delta: float) -> np.ndarray:
     yterms = np.sum(sy_sy, axis=0)
     zterms = np.sum(sz_sz, axis=0)
 
-    h = -0.25 * (xterms + yterms + delta * zterms)
-    return h
+    hamiltonian = -0.25 * (xterms + yterms + delta * zterms)  # interaction terms
+    hamiltonian -= 0.5 * field * np.sum(sz_, axis=0)  # add external field terms
+    return hamiltonian
 
 
 def exact_evolution(
@@ -319,6 +327,7 @@ def trotter_circuit(
     *,
     dt: float,
     delta: float,
+    field: float = 0.0,
     num_trotter_steps: int,
     second_order: bool,
 ) -> QuantumCircuit:
@@ -338,7 +347,8 @@ def trotter_circuit(
     Args:
         qc: quantum circuit to be augmented by the Trotter one.
         dt: evolution time per step (layer) in Trotter algorithm.
-        delta: parameter of corresponding Hamiltonian.
+        delta: anisotropy parameter of the corresponding Hamiltonian.
+        field: external field parameter of the corresponding Hamiltonian.
         num_trotter_steps: number of Trotter steps (layers).
         second_order: True, if the 2nd order Trotter is intended.
 
@@ -365,10 +375,21 @@ def trotter_circuit(
 
     # Build the main part of the 1st or 2nd order Trotter circuit.
     for j in range(num_trotter_steps):
-        for q in range(0, qc.num_qubits - 1, 2):  # 1st half of a layer
+        # 1st half of a layer: even terms
+        for q in range(0, qc.num_qubits - 1, 2):
             _trotter_block(q, betas if second_order and j == 0 else alphas)
-        for q in range(1, qc.num_qubits - 1, 2):  # 2nd half of a layer
+
+        if field != 0:
+            for q in range(0, qc.num_qubits):
+                qc.rz(-field * dt / 2 if second_order else -field * dt, q)
+
+        # 2nd half of a layer: odd terms
+        for q in range(1, qc.num_qubits - 1, 2):
             _trotter_block(q, alphas)
+
+        if field != 0 and second_order:
+            for q in range(0, qc.num_qubits):
+                qc.rz(-field * dt / 2, q)
 
     # For 2nd order Trotter, we add an extra half-layer identical to the front one.
     if second_order:

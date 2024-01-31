@@ -15,12 +15,18 @@ Tests correctness of Trotter framework implementation.
 """
 
 import unittest
-from qiskit.test import QiskitTestCase
+
 import numpy as np
-import aqc_research.utils as helper
+import pytest
+import qiskit.quantum_info as qinfo
+import scipy as sp
+from qiskit import QuantumCircuit
+from qiskit.test import QiskitTestCase
+
 import aqc_research.model_sp_lhs.trotter.trotter as trotop
-from aqc_research.mps_operations import mps_to_vector
+import aqc_research.utils as helper
 from aqc_research.circuit_transform import qcircuit_to_state
+from aqc_research.mps_operations import mps_to_vector
 
 
 class TestTrotterFramework(QiskitTestCase):
@@ -38,7 +44,7 @@ class TestTrotterFramework(QiskitTestCase):
 
     def test_trotter_vs_exact(self):
         """Tests time evolution routines Trotter vs exact."""
-        nsteps, delta = 30, 1.0
+        num_steps, delta = 30, 1.0
         for num_qubits in range(2, self._max_num_qubits + 1):
             hamiltonian = trotop.make_hamiltonian(num_qubits, delta)
             for second_order in [False, True]:
@@ -56,7 +62,7 @@ class TestTrotterFramework(QiskitTestCase):
                             hamiltonian, ini_state_func(num_qubits), evol_tm
                         )
                         exact_state *= np.exp(
-                            -1j * trotop.trotter_global_phase(num_qubits, nsteps, second_order)
+                            -1j * trotop.trotter_global_phase(num_qubits, num_steps, second_order)
                         )
 
                     # Apply Trotter twice over the half-time intervals.
@@ -64,14 +70,14 @@ class TestTrotterFramework(QiskitTestCase):
                         half_trot1 = trotop.Trotter(
                             num_qubits=num_qubits,
                             evol_time=evol_tm * 0.5,
-                            num_steps=nsteps // 2,
+                            num_steps=num_steps // 2,
                             delta=delta,
                             second_order=second_order,
                         )
                         half_trot2 = trotop.Trotter(
                             num_qubits=num_qubits,
                             evol_time=evol_tm * 0.5,
-                            num_steps=nsteps - nsteps // 2,
+                            num_steps=num_steps - num_steps // 2,
                             delta=delta,
                             second_order=second_order,
                         )
@@ -85,7 +91,7 @@ class TestTrotterFramework(QiskitTestCase):
                         full_trot = trotop.Trotter(
                             num_qubits=num_qubits,
                             evol_time=evol_tm,
-                            num_steps=nsteps,
+                            num_steps=num_steps,
                             delta=delta,
                             second_order=second_order,
                         )
@@ -97,6 +103,30 @@ class TestTrotterFramework(QiskitTestCase):
                     mps_fid = trotop.fidelity(trot_state, mps_to_vector(mps))
                     self.assertTrue(fid > 0.9)
                     self.assertTrue(mps_fid > 0.9)
+
+
+@pytest.mark.parametrize("num_qubits", [2, 3, 4, 5])
+@pytest.mark.parametrize("delta", [0.1, 1.0, 10.0])
+@pytest.mark.parametrize("field", [0.0, 0.1, 1.0, 10.0])
+@pytest.mark.parametrize("second_order", [False, True])
+@pytest.mark.parametrize("dt", [0.1])
+@pytest.mark.parametrize("num_steps", [1, 10])
+def test_given_trotter_circuit_when_converted_to_operator_then_matches_analytic(num_qubits, delta, field, second_order,
+                                                                                dt, num_steps):
+    # Exact unitary
+    evol_time = dt * num_steps
+    hamiltonian = trotop.make_hamiltonian(num_qubits, delta, field)
+    desired = sp.linalg.expm(-1j * hamiltonian * evol_time)
+
+    # Unitary from a trotter circuit
+    qc = trotop.trotter_circuit(QuantumCircuit(num_qubits), dt=dt, delta=delta,
+                                field=field, num_trotter_steps=num_steps,
+                                second_order=second_order, )
+    actual = qinfo.Operator(qc).data
+
+    # Compute Frobenius product
+    frob = np.abs(np.trace(actual.conj().T @ desired)) / 2 ** num_qubits
+    np.testing.assert_allclose(1.0, frob, rtol=1e-3, atol=1e-3)
 
 
 if __name__ == "__main__":
