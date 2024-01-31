@@ -16,16 +16,18 @@ Utilities for manipulating the state vectors in MPS format.
 # Method had been moved in AirSimulator in the latest Qiskit. FIXME
 # Instance of 'QuantumCircuit' has no 'set_matrix_product_state' memberPylint(E1101:no-member)
 
-from typing import List, Optional, Tuple
 from random import choice
+from typing import List, Optional, Tuple
+
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
-from aqc_research.parametric_circuit import ParametricCircuit
-from aqc_research.circuit_transform import ansatz_to_qcircuit
-from aqc_research.circuit_structures import create_ansatz_structure
-import aqc_research.utils as helper
+
 import aqc_research.checking as chk
+import aqc_research.utils as helper
+from aqc_research.circuit_structures import create_ansatz_structure
+from aqc_research.circuit_transform import ansatz_to_qcircuit
+from aqc_research.parametric_circuit import ParametricCircuit
 
 _NO_TRUNCATION_THR = 1e-16
 
@@ -173,7 +175,7 @@ def mps_to_vector(qiskit_mps: QiskitMPS) -> np.ndarray:
     """
     mps = _preprocess_mps(qiskit_mps)
     num_qubits = len(mps)
-    state = np.zeros(2**num_qubits, dtype=np.cfloat)
+    state = np.zeros(2 ** num_qubits, dtype=np.cfloat)
     for k in range(state.size):  # for all combinations of individual bits ...
         coef = None
         for n in range(num_qubits):
@@ -213,12 +215,66 @@ def mps_dot(qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS) -> np.cfloat:
     return np.cfloat(a_b.item())
 
 
+def partial_trace(qiskit_mps: QiskitMPS, qubits_to_keep: List):
+    """
+    Given a system of qubits described by a density matrix ⍴_AB, take the partial trace with respect to B to obtain
+    the reduced density matrix ⍴_A = tr_B(⍴_AB) = ∑_i\inb ⟨i|⍴_AB|i⟩
+    :param qiskit_mps: MPS in the form outputted from Qiskit
+    :param qubits_to_keep: List of qubits in A such that all other qubits are traced over
+    :return: Reduced density matrix ⍴_A
+    """
+    mat1 = _preprocess_mps(qiskit_mps)
+
+    n_qubits = len(mat1)
+    qubits_to_contract = [q for q in range(n_qubits) if q not in qubits_to_keep]
+
+    # n=0 step
+    # start with first block from top and bottom MPS.
+    # remove redundant left legs.
+    a, b = np.squeeze(mat1[0], axis=1), np.squeeze(mat1[0], axis=1)
+    if 0 in qubits_to_contract:
+        # contract physical leg from first top and bottom block
+        a_b = np.tensordot(a, np.conj(b), axes=([0], [0]))
+    else:
+        # do not contract physical leg from blocks (tensor product).
+        a_b = np.tensordot(a, np.conj(b), axes=([], []))
+        # reorder to place uncontracted physical leg indices to left.
+        a_b = np.moveaxis(a_b, [2], [1])
+
+    for n in range(1, len(mat1)):
+        a_b = np.tensordot(a_b, mat1[n], axes=([-2], [1]))  # contract inner legs of top MPS to inner leg of next block.
+        if n in qubits_to_contract:
+            # contract inner leg of bottom MPS to inner leg of new bottom block.
+            # contract physical leg of top MPS with physical leg of new bottom block.
+            a_b = np.tensordot(a_b, np.conj(mat1[n]), axes=([-3, -2], [1, 0]))
+        else:
+            # contract inner leg of bottom MPS to inner leg of new bottom block.
+            a_b = np.tensordot(a_b, np.conj(mat1[n]), axes=([-3], [1]))
+            # reorder to place uncontracted physical leg indices to left of uncontracted inner leg indices.
+            a_b = np.swapaxes(a_b, -2, -3)
+
+    # remove redundant open right legs
+    a_b = np.squeeze(a_b, axis=-1)
+    a_b = np.squeeze(a_b, axis=-1)
+
+    n_qubit_kept = len(qubits_to_keep)
+
+    # group all top physical legs to be left indices of array. bottom legs to right indices.
+    # within groups of legs, reorder to be in reverse qubit notation to match qiskit.
+    new_shape = list(reversed(range(n_qubit_kept * 2)[::2])) + list(reversed(range(n_qubit_kept * 2)[1::2]))
+    a_b = np.transpose(a_b, new_shape)
+
+    # reshape to be 2^n by 2^n density matrix.
+    a_b = np.reshape(a_b, (2 ** len(qubits_to_keep), 2 ** len(qubits_to_keep)))
+    return a_b
+
+
 def mps_from_circuit(
-    qc: QuantumCircuit,
-    *,
-    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
-    out_state: Optional[np.ndarray] = None,
-    print_log_data: Optional[bool] = False,
+        qc: QuantumCircuit,
+        *,
+        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+        out_state: Optional[np.ndarray] = None,
+        print_log_data: Optional[bool] = False,
 ) -> QiskitMPS:
     """
     Computes MPS representation of output state (in Qiskit format) after quantum
@@ -246,7 +302,7 @@ def mps_from_circuit(
 
     if isinstance(out_state, np.ndarray):
         qc.save_statevector(label="my_sv")
-        assert chk.complex_1d(out_state, out_state.size == 2**qc.num_qubits)
+        assert chk.complex_1d(out_state, out_state.size == 2 ** qc.num_qubits)
 
     qc.save_matrix_product_state(label="my_mps")
     sim = AerSimulator(
@@ -266,11 +322,11 @@ def mps_from_circuit(
 
 
 def qcircuit_mul_mps(
-    qc: QuantumCircuit,
-    mps_vec: QiskitMPS,
-    *,
-    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
-    out_state: Optional[np.ndarray] = None,
+        qc: QuantumCircuit,
+        mps_vec: QiskitMPS,
+        *,
+        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+        out_state: Optional[np.ndarray] = None,
 ) -> QiskitMPS:
     """
     Applies quantum circuit to right-hand side state vector given in MPS
@@ -299,9 +355,9 @@ def qcircuit_mul_mps(
 
 
 def rand_mps_vec(
-    num_qubits: int,
-    out_state: Optional[np.ndarray] = None,
-    num_layers: int = 3,
+        num_qubits: int,
+        out_state: Optional[np.ndarray] = None,
+        num_layers: int = 3,
 ) -> QiskitMPS:
     """
     Generates a random vector in MPS format.
@@ -324,11 +380,11 @@ def rand_mps_vec(
 
 
 def v_mul_mps(
-    circ: ParametricCircuit,
-    thetas: np.ndarray,
-    mps_vec: QiskitMPS,
-    *,
-    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+        circ: ParametricCircuit,
+        thetas: np.ndarray,
+        mps_vec: QiskitMPS,
+        *,
+        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
 ) -> QiskitMPS:
     """
     Multiplies circuit matrix by the right-hand side vector: ``out = V @ vec``.
@@ -347,11 +403,11 @@ def v_mul_mps(
 
 
 def v_dagger_mul_mps(
-    circ: ParametricCircuit,
-    thetas: np.ndarray,
-    mps_vec: QiskitMPS,
-    *,
-    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+        circ: ParametricCircuit,
+        thetas: np.ndarray,
+        mps_vec: QiskitMPS,
+        *,
+        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
 ) -> QiskitMPS:
     """
     Multiplies conjugate-transposed circuit matrix by right-hand side vector:

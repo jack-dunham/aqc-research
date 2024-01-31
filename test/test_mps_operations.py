@@ -13,20 +13,23 @@
 """
 Tests correctness of our interpretation of Qiskit MPS implementation.
 """
-
-from time import perf_counter
 import unittest
+from time import perf_counter
 from typing import List, Dict
-from qiskit.test import QiskitTestCase
+
 import numpy as np
-from aqc_research.parametric_circuit import ParametricCircuit
+import pytest
+from qiskit.quantum_info import partial_trace, Statevector
+from qiskit.test import QiskitTestCase
+
+import aqc_research.circuit_transform as ctr
+import aqc_research.utils as helper
+import mps_operations as mpsop
 import test.utils_for_testing as tut
 from aqc_research.circuit_structures import create_ansatz_structure
 from aqc_research.circuit_transform import ansatz_to_qcircuit
-import aqc_research.utils as helper
-import aqc_research.mps_operations as mpsop
 from aqc_research.job_executor import run_jobs
-import aqc_research.circuit_transform as ctr
+from aqc_research.parametric_circuit import ParametricCircuit
 
 
 class TestMPS(QiskitTestCase):
@@ -60,7 +63,7 @@ class TestMPS(QiskitTestCase):
         tol = (2 ** max(num_qubits - 10, 0)) * self._tol
 
         # Generates a random state in MPS format.
-        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
         mps = mpsop.rand_mps_vec(num_qubits, out_state=state1)
         self.assertTrue(mpsop.check_mps(mps))
 
@@ -81,8 +84,8 @@ class TestMPS(QiskitTestCase):
         """Job function for the test_mps_dot()."""
         num_qubits = int(conf["num_qubits"])
         tol = (2 ** max(num_qubits - 10, 0)) * self._tol
-        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
-        state2 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+        state2 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
 
         mps1 = mpsop.rand_mps_vec(num_qubits, out_state=state1)
         mps2 = mpsop.rand_mps_vec(num_qubits, out_state=state2)
@@ -129,7 +132,7 @@ class TestMPS(QiskitTestCase):
 
         # state1 <-- MPS(qc1) * MPS(qc0).
         mps0 = mpsop.mps_from_circuit(qcirc[0].copy())  # copy!
-        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
         tic = perf_counter()
         mpsop.qcircuit_mul_mps(qcirc[1].copy(), mps0, out_state=state1)  # copy!
         clock = perf_counter() - tic
@@ -159,7 +162,7 @@ class TestMPS(QiskitTestCase):
         blocks = tut.rand_circuit(num_qubits, np.random.randint(20, 50))
         circ = ParametricCircuit(num_qubits, entangler, blocks)
         thetas = helper.rand_thetas(circ.num_thetas)
-        vec = np.zeros(2**num_qubits, dtype=np.cfloat)
+        vec = np.zeros(2 ** num_qubits, dtype=np.cfloat)
         mps_vec = mpsop.rand_mps_vec(num_qubits, out_state=vec)
 
         # vec2 = V @ V.H @ vec == vec.
@@ -197,6 +200,40 @@ class TestMPS(QiskitTestCase):
         """Tests the functions mpsop.v_mul_vec() and mpsop.v_dagger_mul_vec()."""
         results = run_jobs(self._make_configs(), self._seed, self._job_v_mul_vec)
         self.assertTrue(all(r["status"] == "ok" for r in results))
+
+
+class TestRDMFromMPS:
+    @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
+    def test_given_random_state_when_partial_trace_on_random_subset_then_mps_method_matches_qiskit(self, num_qubits):
+        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+        mps1 = mpsop.rand_mps_vec(num_qubits, out_state=state1)
+        qubits_to_keep = np.random.choice(range(num_qubits), size=np.random.randint(1, num_qubits), replace=False)
+        rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep)
+        qubits_to_contract = [q for q in range(num_qubits) if q not in qubits_to_keep]
+        rdm_qiskit = partial_trace(Statevector(state1), qubits_to_contract)
+        np.testing.assert_array_almost_equal(rdm_mps, rdm_qiskit.data,
+                                             err_msg="RDM as calculated by our MPS method should equal Qiskit RDM")
+
+    @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
+    def test_given_random_mps_when_partial_trace_on_all_qubits_then_equals_one(self, num_qubits):
+        mps1 = mpsop.rand_mps_vec(num_qubits)
+        rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep=[])
+        np.testing.assert_almost_equal(rdm_mps.item(), 1 + 0j)
+
+    @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
+    def test_given_random_mps_when_partial_trace_random_subset_then_rdm_hermitian(self, num_qubits):
+        mps1 = mpsop.rand_mps_vec(num_qubits)
+        qubits_to_keep = np.random.choice(range(num_qubits), size=np.random.randint(1, num_qubits), replace=False)
+        rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep=qubits_to_keep)
+        np.testing.assert_array_almost_equal(rdm_mps, rdm_mps.conj().T)
+
+    @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
+    def test_given_random_mps_when_partial_trace_random_subset_then_rdm_has_non_neg_eigenvalues(self, num_qubits):
+        mps1 = mpsop.rand_mps_vec(num_qubits)
+        qubits_to_keep = np.random.choice(range(num_qubits), size=np.random.randint(1, num_qubits), replace=False)
+        rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep=qubits_to_keep)
+        eigenvalues = np.linalg.eig(rdm_mps)[0].real
+        assert (np.all(eigenvalues >= -1e-10))
 
 
 if __name__ == "__main__":
