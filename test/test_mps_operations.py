@@ -19,12 +19,13 @@ from typing import List, Dict
 
 import numpy as np
 import pytest
-from qiskit.quantum_info import partial_trace, Statevector
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import partial_trace, Statevector, SparsePauliOp
 from qiskit.test import QiskitTestCase
 
 import aqc_research.circuit_transform as ctr
+import aqc_research.mps_operations as mpsop
 import aqc_research.utils as helper
-import mps_operations as mpsop
 import test.utils_for_testing as tut
 from aqc_research.circuit_structures import create_ansatz_structure
 from aqc_research.circuit_transform import ansatz_to_qcircuit
@@ -234,6 +235,29 @@ class TestRDMFromMPS:
         rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep=qubits_to_keep)
         eigenvalues = np.linalg.eig(rdm_mps)[0].real
         assert (np.all(eigenvalues >= -1e-10))
+
+
+class TestExpectationFromMPS:
+    @pytest.mark.parametrize("op, expected", [('Z', 1), ('Y', 0), ('X', 0)])
+    def test_given_zero_state_mps_when_pauli_expectation_then_is_correct(self, op, expected):
+        qc = QuantumCircuit(4)
+        mps = mpsop.mps_from_circuit(qc)
+        expectation = [mpsop.mps_expectation(mps, op, i) for i in range(4)]
+        np.testing.assert_allclose(expectation, expected)
+
+    @pytest.mark.parametrize("op", ['Z', 'X', 'Y'])
+    def test_given_random_mps_when_pauli_expectation_then_matches_analytic(self, op):
+        n = 4
+        state = np.zeros(2 ** n, dtype=np.cfloat)
+        mps = mpsop.rand_mps_vec(n, out_state=state)
+        mps_qubit_evals = [mpsop.mps_expectation(mps, op, i) for i in range(n)]
+
+        # Construct single-qubit operator for all qubits
+        ops = list(reversed([SparsePauliOp("I" * i + op + "I" * (n - i - 1)) for i in range(n)]))
+
+        analytic_qubit_evals = [np.real(np.dot(state.conj(), np.dot(op.to_matrix(), state))) for op in ops]
+
+        np.testing.assert_allclose(mps_qubit_evals, analytic_qubit_evals)
 
 
 if __name__ == "__main__":

@@ -191,7 +191,7 @@ def mps_to_vector(qiskit_mps: QiskitMPS) -> np.ndarray:
     return state
 
 
-def mps_dot(qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS) -> np.cfloat:
+def mps_dot(qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS, already_preprocessed: bool = False) -> np.cfloat:
     """
     Computes dot product between MPS decompositions of two quantum states:
     ``< mps1 | mps2 >``.
@@ -203,7 +203,11 @@ def mps_dot(qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS) -> np.cfloat:
     Returns:
         complex dot product value.
     """
-    mat1, mat2 = _preprocess_mps(qiskit_mps1), _preprocess_mps(qiskit_mps2)
+    if already_preprocessed == False:
+        mat1, mat2 = _preprocess_mps(qiskit_mps1), _preprocess_mps(qiskit_mps2)
+    else:
+        mat1, mat2 = qiskit_mps1, qiskit_mps2
+
     a, b = np.squeeze(mat1[0], axis=1), np.squeeze(mat2[0], axis=1)
     a_b = np.tensordot(np.conj(a), b, axes=([0], [0]))
 
@@ -213,6 +217,41 @@ def mps_dot(qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS) -> np.cfloat:
         a_b = np.tensordot(a_b, mat2[n], axes=([0, 1], [1, 0]))
 
     return np.cfloat(a_b.item())
+
+
+def mps_expectation(qiskit_mps: QiskitMPS, operator: str, qubit_index: int):
+    """
+    Computes expectation of a Pauli operator (P) for a given qubit:
+    ``< mps | P | mps >``.
+
+    Args:
+        qiskit_mps: MPS decomposition of the state.
+
+    Returns:
+        real expectation value.
+    """
+
+    X = np.array([[0, 1], [1, 0]])
+    Y = np.array([[0, -1.0j], [1.0j, 0]])
+    Z = np.array([[1, 0], [0, -1]])
+
+    if operator == 'X':
+        op = X
+    elif operator == 'Y':
+        op = Y
+    elif operator == 'Z':
+        op = Z
+
+    mat1, mat2 = _preprocess_mps(qiskit_mps), _preprocess_mps(qiskit_mps)
+
+    # Apply op (Pauli X, Y, or Z) to qubit 'qubit_index'
+    mat2[qubit_index] = np.tensordot(op, mat2[qubit_index], axes=([1], [0]))
+
+    expectation = mps_dot(mat1, mat2, already_preprocessed=True)
+
+    assert np.abs(np.imag(expectation)) <= 1e-10
+    
+    return np.real(expectation)
 
 
 def partial_trace(qiskit_mps: QiskitMPS, qubits_to_keep: List):
