@@ -16,11 +16,12 @@ Tests the module 'core_op_matrix.py'.
 
 from typing import List, Tuple
 import unittest
+from unittest import TestCase
+
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from qiskit.circuit.library import RZGate, RYGate
-from qiskit.test import QiskitTestCase
 import qiskit.quantum_info as qinfo
 import aqc_research.utils as helper
 from aqc_research.parametric_circuit import ParametricCircuit
@@ -30,7 +31,7 @@ import aqc_research.circuit_transform as ctr
 import aqc_research.checking as chk
 
 
-class TestCoreOperationsLevel2(QiskitTestCase):
+class TestCoreOperationsLevel2(TestCase):
     """Tests the module 'core_op_matrix.py'."""
 
     num_repeats = 2  # number of test repetitions

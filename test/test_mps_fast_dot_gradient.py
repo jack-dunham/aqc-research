@@ -18,17 +18,19 @@ vectors in MPS format, where the objective function is defined as a dot product
 
 import unittest
 from typing import Optional, Tuple
+from unittest import TestCase
+
 import numpy as np
 from qiskit import QuantumCircuit
-from qiskit.test import QiskitTestCase
-from aqc_research.parametric_circuit import ParametricCircuit
-import aqc_research.utils as helper
-import aqc_research.mps_operations as mpsop
+
+import aqc_research.checking as chk
 import aqc_research.mps_dot_objective as mpsobj
+import aqc_research.mps_operations as mpsop
+import aqc_research.utils as helper
+import test.utils_dot_gradient_test as gradtest
 from aqc_research.circuit_transform import qcircuit_to_matrix, ansatz_to_qcircuit
 from aqc_research.job_executor import run_jobs
-import aqc_research.checking as chk
-import test.utils_dot_gradient_test as gradtest
+from aqc_research.parametric_circuit import ParametricCircuit
 
 
 class _Objective(gradtest.BaseGradTestObjective):
@@ -109,7 +111,7 @@ class _Objective(gradtest.BaseGradTestObjective):
         )
 
 
-class TestMPSFastDotGradient(QiskitTestCase):
+class TestMPSFastDotGradient(TestCase):
     """
     Compares full gradient of the dot product ``<0|V.H|phi>`` against numeric
     one, where state vectors are represented in MPS format.

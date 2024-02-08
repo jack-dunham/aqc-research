@@ -18,8 +18,8 @@ on barren plateau. Combination of L-BFGS and gradient descent might work better.
 from time import perf_counter
 from typing import Any, Optional, Union, Callable
 import numpy as np
-from qiskit.algorithms.optimizers import L_BFGS_B, ADAM, COBYLA, BOBYQA
-from qiskit.algorithms.optimizers.optimizer import OptimizerResult
+from qiskit_algorithms.optimizers import OptimizerResult, BOBYQA, COBYLA, L_BFGS_B, ADAM
+
 import aqc_research.checking as chk
 from aqc_research.utils import create_logger
 from aqc_research.parametric_circuit import ParametricCircuit

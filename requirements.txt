@@ -7,3 +7,4 @@ pandas
 jupyter
 qiskit
 qiskit-aer
+qiskit-algorithms

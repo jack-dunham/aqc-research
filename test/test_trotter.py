@@ -15,13 +15,13 @@ Tests correctness of Trotter framework implementation.
 """
 
 import unittest
+from unittest import TestCase
 
 import numpy as np
 import pytest
 import qiskit.quantum_info as qinfo
 import scipy as sp
 from qiskit import QuantumCircuit
-from qiskit.test import QiskitTestCase
 
 import aqc_research.model_sp_lhs.trotter.trotter as trotop
 import aqc_research.utils as helper
@@ -29,7 +29,7 @@ from aqc_research.circuit_transform import qcircuit_to_state
 from aqc_research.mps_operations import mps_to_vector
 
 
-class TestTrotterFramework(QiskitTestCase):
+class TestTrotterFramework(TestCase):
     """
     Tests correctness of Trotter framework implementation.
     """

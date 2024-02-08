@@ -16,12 +16,14 @@ Tests correctness of utilities for target preparation in target_states.py.
 
 import unittest
 from dataclasses import dataclass
+from unittest import TestCase
+
 import numpy as np
-from qiskit.test import QiskitTestCase
-import aqc_research.utils as helper
+
+import aqc_research.model_sp_lhs.trotter.target_states as trotst
 import aqc_research.model_sp_lhs.trotter.trotter as trotop
 import aqc_research.mps_operations as mpsop
-import aqc_research.model_sp_lhs.trotter.target_states as trotst
+import aqc_research.utils as helper
 
 
 @dataclass(frozen=True)
@@ -37,7 +39,7 @@ class _Options:
     evol_times = np.round((1 + np.arange(_num_big_time_steps)) * _big_step, 3)
 
 
-class TestTrotterTargets(QiskitTestCase):
+class TestTrotterTargets(TestCase):
     """
     Tests correctness of utilities for target preparation in target_states.py.
     """

@@ -15,15 +15,17 @@ Tests for the module 'model_sp_lhs/objective_base.py'.
 """
 
 import unittest
+from unittest import TestCase
+
 import numpy as np
-from qiskit.test import QiskitTestCase
 from qiskit import QuantumCircuit
-from aqc_research.model_sp_lhs.objective_base import ThinStateHandler
-from aqc_research.circuit_transform import qcircuit_to_state
+
 import aqc_research.core_operations as cop
+from aqc_research.circuit_transform import qcircuit_to_state
+from aqc_research.model_sp_lhs.objective_base import ThinStateHandler
 
 
-class TestSPObjectiveBase(QiskitTestCase):
+class TestSPObjectiveBase(TestCase):
     """Tests for the module 'model_sp_lhs/objective_base.py'."""
 
     max_num_qubits = 5  # maximum number of qubits in tests

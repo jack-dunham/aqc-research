@@ -16,12 +16,12 @@ Tests correctness of our interpretation of Qiskit MPS implementation.
 import unittest
 from time import perf_counter
 from typing import List, Dict
+from unittest import TestCase
 
 import numpy as np
 import pytest
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import partial_trace, Statevector, SparsePauliOp
-from qiskit.test import QiskitTestCase
 
 import aqc_research.circuit_transform as ctr
 import aqc_research.mps_operations as mpsop
@@ -33,7 +33,7 @@ from aqc_research.job_executor import run_jobs
 from aqc_research.parametric_circuit import ParametricCircuit
 
 
-class TestMPS(QiskitTestCase):
+class TestMPS(TestCase):
     """
     Tests correctness of our interpretation of Qiskit MPS implementation.
     **Note**, MPS is defined up to global phase factor (after transpiler?).

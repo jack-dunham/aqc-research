@@ -17,15 +17,17 @@ where the objective function is defined as a dot product ``<x|V.H|y>``.
 
 import unittest
 from typing import Optional, Tuple
+from unittest import TestCase
+
 import numpy as np
-from qiskit.test import QiskitTestCase
-from aqc_research.parametric_circuit import ParametricCircuit
-import test.utils_for_testing as tut
-import aqc_research.core_operations as cop
-from aqc_research.job_executor import run_jobs
-import aqc_research.circuit_transform as ctr
-import test.utils_dot_gradient_test as gradtest
+
 import aqc_research.checking as chk
+import aqc_research.circuit_transform as ctr
+import aqc_research.core_operations as cop
+import test.utils_dot_gradient_test as gradtest
+import test.utils_for_testing as tut
+from aqc_research.job_executor import run_jobs
+from aqc_research.parametric_circuit import ParametricCircuit
 
 
 class _Objective(gradtest.BaseGradTestObjective):
@@ -98,7 +100,7 @@ class _Objective(gradtest.BaseGradTestObjective):
         )
 
 
-class TestDotGradient(QiskitTestCase):
+class TestDotGradient(TestCase):
     """
     Compares full gradient of the dot product ``<x|V.H|y>`` against numeric one.
     Compares partial vs full gradient.
