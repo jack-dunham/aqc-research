@@ -22,8 +22,10 @@ import numpy as np
 import pytest
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import partial_trace, Statevector, SparsePauliOp
+from qiskit.circuit.random import random_circuit
 
 import aqc_research.circuit_transform as ctr
+from aqc_research.model_sp_lhs.trotter.trotter import trotter_circuit
 import aqc_research.mps_operations as mpsop
 import aqc_research.utils as helper
 import test.utils_for_testing as tut
@@ -258,6 +260,52 @@ class TestExpectationFromMPS:
         analytic_qubit_evals = [np.real(np.dot(state.conj(), np.dot(op.to_matrix(), state))) for op in ops]
 
         np.testing.assert_allclose(mps_qubit_evals, analytic_qubit_evals)
+
+
+class TestMaxChiFromCircuit:
+    def test_given_product_state_when_max_chi_from_circuit_then_1(self):
+        for _ in range(10):
+            qc = QuantumCircuit(5)
+            # max_chi_from_circuit() will not work for circuits with no 2-qubit gates because Aer simulator will not log
+            # any bond dimension data unless it sees a 2-qubit gate. This CNOT does not change the state.
+            qc.cx(0, 1)
+            for i in range(5):
+                qc.u(4*np.pi*np.random.random(), 2*np.pi*np.random.random(), 2*np.pi*np.random.random(), i)
+            assert mpsop.max_chi_from_circuit(qc) == 1
+
+    def test_given_bell_state_when_max_chi_from_circuit_then_2(self):
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        assert mpsop.max_chi_from_circuit(qc) == 2
+
+    def test_given_N_qubit_rand_state_when_max_chi_from_circuit_then_bounded(self):
+        for N in range(2, 10):
+            qc = random_circuit(N, 2*N)
+            assert mpsop.max_chi_from_circuit(qc) <= 2**(N/2)
+
+    def test_given_1_and_2_trotter_steps_when_max_chi_from_circuit_then_larger_for_2_steps(self):
+        # This tests two things: a) entanglement grows with time and b) max_chi_from_circuit() is not returning the
+        # cumulative maximum bond dimension
+        n = 20
+        dt = 0.4
+        delta = 1.0
+
+        qc1 = QuantumCircuit(n)
+        qc2 = QuantumCircuit(n)
+
+        # Initialise Neel state
+        qc1.x(range(0, n, 2))
+        qc2.x(range(0, n, 2))
+
+        trotter_circuit(qc1, dt=dt, delta=delta, num_trotter_steps=1, second_order=True)
+        trotter_circuit(qc2, dt=dt, delta=delta, num_trotter_steps=2, second_order=True)
+
+        # Call max_chi_from_circuit(qc2) first to break test if returning cumulative max bond dimension
+        max_chi_2 = mpsop.max_chi_from_circuit(qc2)
+        max_chi_1 = mpsop.max_chi_from_circuit(qc1)
+
+        assert max_chi_2 > max_chi_1
 
 
 if __name__ == "__main__":

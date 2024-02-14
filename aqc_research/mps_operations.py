@@ -13,6 +13,8 @@
 """
 Utilities for manipulating the state vectors in MPS format.
 """
+import logging
+import re
 # Method had been moved in AirSimulator in the latest Qiskit. FIXME
 # Instance of 'QuantumCircuit' has no 'set_matrix_product_state' memberPylint(E1101:no-member)
 
@@ -20,7 +22,7 @@ from random import choice
 from typing import List, Optional, Tuple
 
 import numpy as np
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 
 import aqc_research.checking as chk
@@ -28,6 +30,8 @@ import aqc_research.utils as helper
 from aqc_research.circuit_structures import create_ansatz_structure
 from aqc_research.circuit_transform import ansatz_to_qcircuit
 from aqc_research.parametric_circuit import ParametricCircuit
+
+logger = logging.getLogger(__name__)
 
 _NO_TRUNCATION_THR = 1e-16
 
@@ -250,7 +254,7 @@ def mps_expectation(qiskit_mps: QiskitMPS, operator: str, qubit_index: int):
     expectation = mps_dot(mat1, mat2, already_preprocessed=True)
 
     assert np.abs(np.imag(expectation)) <= 1e-10
-    
+
     return np.real(expectation)
 
 
@@ -353,11 +357,67 @@ def mps_from_circuit(
     data = result.data(0)
 
     if print_log_data:
-        print(result.results[0].metadata["MPS_log_data"])
+        mps_log_string = result.results[0].metadata["MPS_log_data"]
+        bond_dimensions = re.findall(r'\[(.*?)\]', mps_log_string)
+        max_chi = max(map(int, ' '.join(bond_dimensions).split()))
+        print(mps_log_string)
+        logger.debug(f"MPS created with max bond dimension {max_chi}")
     if isinstance(out_state, np.ndarray):
         np.copyto(out_state, np.asarray(data["my_sv"]))
 
     return data["my_mps"]
+
+
+def max_chi_from_circuit(
+    qc: QuantumCircuit,
+    *,
+    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+) -> int:
+    """
+    Finds the maximum bond dimension at any stage of the computation when computing the MPS representation of output 
+    state (in Qiskit format) after quantum circuit acting on zero state: ``output = circuit @ |0>``.
+
+    Args:
+        qc: quantum circuit that acts on state ``|0>``.
+        trunc_thr: truncation threshold in MPS representation.
+
+    Returns:
+        Maximum bond dimension
+    """
+    assert isinstance(qc, QuantumCircuit)
+    assert chk.is_float(trunc_thr, 0 <= trunc_thr <= 0.1)
+
+    qc_copy = qc.copy()
+
+    N = qc_copy.num_qubits
+
+    # Linear coupling map for transpilation
+    linear_coupling = [0]*(N-1)
+    for i in range(N-1):
+        linear_coupling[i] = [i, i+1]
+
+    # Transpile to linear coupling, this means the simulator won't have to perform any internal swaps. As a result, the
+    # number of of times the bond dimensions are logged is equal to the number of CNOTs in the transpiled circuit
+    qc_copy = transpile(qc_copy, basis_gates=['cx', 'rx', 'ry', 'rz'],
+                        coupling_map=linear_coupling, optimization_level=0)
+    num_2_qubit_gates = qc_copy.count_ops()['cx']
+
+    qc_copy.save_matrix_product_state(label="my_mps")
+    sim = AerSimulator(
+        method="matrix_product_state",
+        matrix_product_state_truncation_threshold=trunc_thr,
+        mps_log_data=True,
+    )
+    result = sim.run(qc_copy, shots=1).result()
+
+    mps_log_string = result.results[0].metadata["MPS_log_data"]
+    bond_dimensions = re.findall(r'\[(.*?)\]', mps_log_string)
+
+    # Remove all entries from previous circuits
+    del bond_dimensions[:-num_2_qubit_gates]
+    max_chi = max(map(int, ' '.join(bond_dimensions).split()))
+
+    return max_chi
 
 
 def qcircuit_mul_mps(
