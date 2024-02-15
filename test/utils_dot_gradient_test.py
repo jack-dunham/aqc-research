@@ -16,15 +16,20 @@ Building blocks for any gradient unit test of a dot-product objective:
 ``V = V(thetas)`` is a matrix of parametric circuit (V.H means adjoint).
 """
 
+import test.utils_for_testing as tut
 from abc import ABC, abstractmethod
 from time import perf_counter
-from typing import Callable, List, Dict, Tuple, Optional
+from typing import Callable, Dict, List, Optional, Tuple
+
 import numpy as np
-from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
-import test.utils_for_testing as tut
-import aqc_research.utils as helper
-from aqc_research.circuit_structures import create_ansatz_structure, make_trotter_like_circuit
+
 import aqc_research.checking as chk
+import aqc_research.utils as helper
+from aqc_research.circuit_structures import (
+    create_ansatz_structure,
+    make_trotter_like_circuit,
+)
+from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 
 
 class BaseGradTestObjective(ABC):

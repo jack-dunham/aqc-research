@@ -17,19 +17,21 @@ by default that all flip-terms in objective function have the same weight.
 The script also includes auxiliary classes that facilitate state preparation.
 """
 
-from abc import ABC, abstractmethod
-import itertools
 import functools
-from typing import Optional, Tuple, Union, List, Callable
+import itertools
+from abc import ABC, abstractmethod
+from typing import Callable, List, Optional, Tuple, Union
+
 import numpy as np
 from qiskit import QuantumCircuit
+
 import aqc_research.checking as chk
-from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
-import aqc_research.utils as utl
 import aqc_research.core_operations as cop
+import aqc_research.utils as utl
 from aqc_research.circuit_transform import qcircuit_to_state
-from aqc_research.mps_operations import QiskitMPS, mps_from_circuit, mps_dot, check_mps
-from aqc_research.optimizer import TimeoutChecker, EarlyStopper
+from aqc_research.mps_operations import QiskitMPS, check_mps, mps_dot, mps_from_circuit
+from aqc_research.optimizer import EarlyStopper, TimeoutChecker
+from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 
 _logger = utl.create_logger(__file__)
 

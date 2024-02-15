@@ -18,11 +18,20 @@ performance efficiency.
 """
 
 from typing import Optional, Tuple
+
 import numpy as np
-import aqc_research.utils as helper
+
 import aqc_research.checking as chk
+import aqc_research.utils as helper
+from aqc_research.elementary_operations import (
+    make_rx,
+    make_ry,
+    make_rz,
+    np_phase,
+    np_x,
+    np_z,
+)
 from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
-from aqc_research.elementary_operations import np_phase, np_x, np_z, make_rx, make_ry, make_rz
 
 _logger = helper.create_logger(__file__)
 

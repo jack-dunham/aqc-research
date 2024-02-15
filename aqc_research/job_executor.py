@@ -14,13 +14,15 @@
 Utilities for running the parallel simulations.
 """
 
-import traceback
 import inspect
 import sys
+import traceback
 from time import perf_counter
-from typing import Callable, List, Dict
-from joblib import Parallel, delayed
+from typing import Callable, Dict, List
+
 import numpy as np
+from joblib import Parallel, delayed
+
 import aqc_research.checking as chk
 
 

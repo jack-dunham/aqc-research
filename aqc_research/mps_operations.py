@@ -15,9 +15,6 @@ Utilities for manipulating the state vectors in MPS format.
 """
 import logging
 import re
-# Method had been moved in AirSimulator in the latest Qiskit. FIXME
-# Instance of 'QuantumCircuit' has no 'set_matrix_product_state' memberPylint(E1101:no-member)
-
 from random import choice
 from typing import List, Optional, Tuple
 
@@ -30,6 +27,10 @@ import aqc_research.utils as helper
 from aqc_research.circuit_structures import create_ansatz_structure
 from aqc_research.circuit_transform import ansatz_to_qcircuit
 from aqc_research.parametric_circuit import ParametricCircuit
+
+# Method had been moved in AirSimulator in the latest Qiskit. FIXME
+# Instance of 'QuantumCircuit' has no 'set_matrix_product_state' memberPylint(E1101:no-member)
+
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +180,7 @@ def mps_to_vector(qiskit_mps: QiskitMPS) -> np.ndarray:
     """
     mps = _preprocess_mps(qiskit_mps)
     num_qubits = len(mps)
-    state = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+    state = np.zeros(2**num_qubits, dtype=np.cfloat)
     for k in range(state.size):  # for all combinations of individual bits ...
         coef = None
         for n in range(num_qubits):
@@ -195,7 +196,9 @@ def mps_to_vector(qiskit_mps: QiskitMPS) -> np.ndarray:
     return state
 
 
-def mps_dot(qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS, already_preprocessed: bool = False) -> np.cfloat:
+def mps_dot(
+    qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS, already_preprocessed: bool = False
+) -> np.cfloat:
     """
     Computes dot product between MPS decompositions of two quantum states:
     ``< mps1 | mps2 >``.
@@ -239,11 +242,11 @@ def mps_expectation(qiskit_mps: QiskitMPS, operator: str, qubit_index: int):
     Y = np.array([[0, -1.0j], [1.0j, 0]])
     Z = np.array([[1, 0], [0, -1]])
 
-    if operator == 'X':
+    if operator == "X":
         op = X
-    elif operator == 'Y':
+    elif operator == "Y":
         op = Y
-    elif operator == 'Z':
+    elif operator == "Z":
         op = Z
 
     mat1, mat2 = _preprocess_mps(qiskit_mps), _preprocess_mps(qiskit_mps)
@@ -260,8 +263,8 @@ def mps_expectation(qiskit_mps: QiskitMPS, operator: str, qubit_index: int):
 
 def partial_trace(qiskit_mps: QiskitMPS, qubits_to_keep: List):
     """
-    Given a system of qubits described by a density matrix ⍴_AB, take the partial trace with respect to B to obtain
-    the reduced density matrix ⍴_A = tr_B(⍴_AB) = ∑_i\inb ⟨i|⍴_AB|i⟩
+    Given a system of qubits described by a density matrix ⍴_AB, take the partial trace with respect
+    to B to obtain the reduced density matrix ⍴_A = tr_B(⍴_AB) = ∑_i\inb ⟨i|⍴_AB|i⟩
     :param qiskit_mps: MPS in the form outputted from Qiskit
     :param qubits_to_keep: List of qubits in A such that all other qubits are traced over
     :return: Reduced density matrix ⍴_A
@@ -285,7 +288,9 @@ def partial_trace(qiskit_mps: QiskitMPS, qubits_to_keep: List):
         a_b = np.moveaxis(a_b, [2], [1])
 
     for n in range(1, len(mat1)):
-        a_b = np.tensordot(a_b, mat1[n], axes=([-2], [1]))  # contract inner legs of top MPS to inner leg of next block.
+        a_b = np.tensordot(
+            a_b, mat1[n], axes=([-2], [1])
+        )  # contract inner legs of top MPS to inner leg of next block.
         if n in qubits_to_contract:
             # contract inner leg of bottom MPS to inner leg of new bottom block.
             # contract physical leg of top MPS with physical leg of new bottom block.
@@ -304,7 +309,9 @@ def partial_trace(qiskit_mps: QiskitMPS, qubits_to_keep: List):
 
     # group all top physical legs to be left indices of array. bottom legs to right indices.
     # within groups of legs, reorder to be in reverse qubit notation to match qiskit.
-    new_shape = list(reversed(range(n_qubit_kept * 2)[::2])) + list(reversed(range(n_qubit_kept * 2)[1::2]))
+    new_shape = list(reversed(range(n_qubit_kept * 2)[::2])) + list(
+        reversed(range(n_qubit_kept * 2)[1::2])
+    )
     a_b = np.transpose(a_b, new_shape)
 
     # reshape to be 2^n by 2^n density matrix.
@@ -313,11 +320,11 @@ def partial_trace(qiskit_mps: QiskitMPS, qubits_to_keep: List):
 
 
 def mps_from_circuit(
-        qc: QuantumCircuit,
-        *,
-        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
-        out_state: Optional[np.ndarray] = None,
-        print_log_data: Optional[bool] = False,
+    qc: QuantumCircuit,
+    *,
+    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+    out_state: Optional[np.ndarray] = None,
+    print_log_data: Optional[bool] = False,
 ) -> QiskitMPS:
     """
     Computes MPS representation of output state (in Qiskit format) after quantum
@@ -345,7 +352,7 @@ def mps_from_circuit(
 
     if isinstance(out_state, np.ndarray):
         qc.save_statevector(label="my_sv")
-        assert chk.complex_1d(out_state, out_state.size == 2 ** qc.num_qubits)
+        assert chk.complex_1d(out_state, out_state.size == 2**qc.num_qubits)
 
     qc.save_matrix_product_state(label="my_mps")
     sim = AerSimulator(
@@ -358,8 +365,8 @@ def mps_from_circuit(
 
     if print_log_data:
         mps_log_string = result.results[0].metadata["MPS_log_data"]
-        bond_dimensions = re.findall(r'\[(.*?)\]', mps_log_string)
-        max_chi = max(map(int, ' '.join(bond_dimensions).split()))
+        bond_dimensions = re.findall(r"\[(.*?)\]", mps_log_string)
+        max_chi = max(map(int, " ".join(bond_dimensions).split()))
         print(mps_log_string)
         logger.debug(f"MPS created with max bond dimension {max_chi}")
     if isinstance(out_state, np.ndarray):
@@ -374,7 +381,7 @@ def max_chi_from_circuit(
     trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
 ) -> int:
     """
-    Finds the maximum bond dimension at any stage of the computation when computing the MPS representation of output 
+    Finds the maximum bond dimension at any stage of the computation when computing the MPS representation of output
     state (in Qiskit format) after quantum circuit acting on zero state: ``output = circuit @ |0>``.
 
     Args:
@@ -392,15 +399,19 @@ def max_chi_from_circuit(
     N = qc_copy.num_qubits
 
     # Linear coupling map for transpilation
-    linear_coupling = [0]*(N-1)
-    for i in range(N-1):
-        linear_coupling[i] = [i, i+1]
+    linear_coupling = [0] * (N - 1)
+    for i in range(N - 1):
+        linear_coupling[i] = [i, i + 1]
 
     # Transpile to linear coupling, this means the simulator won't have to perform any internal swaps. As a result, the
     # number of of times the bond dimensions are logged is equal to the number of CNOTs in the transpiled circuit
-    qc_copy = transpile(qc_copy, basis_gates=['cx', 'rx', 'ry', 'rz'],
-                        coupling_map=linear_coupling, optimization_level=0)
-    num_2_qubit_gates = qc_copy.count_ops()['cx']
+    qc_copy = transpile(
+        qc_copy,
+        basis_gates=["cx", "rx", "ry", "rz"],
+        coupling_map=linear_coupling,
+        optimization_level=0,
+    )
+    num_2_qubit_gates = qc_copy.count_ops()["cx"]
 
     qc_copy.save_matrix_product_state(label="my_mps")
     sim = AerSimulator(
@@ -411,21 +422,21 @@ def max_chi_from_circuit(
     result = sim.run(qc_copy, shots=1).result()
 
     mps_log_string = result.results[0].metadata["MPS_log_data"]
-    bond_dimensions = re.findall(r'\[(.*?)\]', mps_log_string)
+    bond_dimensions = re.findall(r"\[(.*?)\]", mps_log_string)
 
     # Remove all entries from previous circuits
     del bond_dimensions[:-num_2_qubit_gates]
-    max_chi = max(map(int, ' '.join(bond_dimensions).split()))
+    max_chi = max(map(int, " ".join(bond_dimensions).split()))
 
     return max_chi
 
 
 def qcircuit_mul_mps(
-        qc: QuantumCircuit,
-        mps_vec: QiskitMPS,
-        *,
-        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
-        out_state: Optional[np.ndarray] = None,
+    qc: QuantumCircuit,
+    mps_vec: QiskitMPS,
+    *,
+    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+    out_state: Optional[np.ndarray] = None,
 ) -> QiskitMPS:
     """
     Applies quantum circuit to right-hand side state vector given in MPS
@@ -454,9 +465,9 @@ def qcircuit_mul_mps(
 
 
 def rand_mps_vec(
-        num_qubits: int,
-        out_state: Optional[np.ndarray] = None,
-        num_layers: int = 3,
+    num_qubits: int,
+    out_state: Optional[np.ndarray] = None,
+    num_layers: int = 3,
 ) -> QiskitMPS:
     """
     Generates a random vector in MPS format.
@@ -479,11 +490,11 @@ def rand_mps_vec(
 
 
 def v_mul_mps(
-        circ: ParametricCircuit,
-        thetas: np.ndarray,
-        mps_vec: QiskitMPS,
-        *,
-        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+    circ: ParametricCircuit,
+    thetas: np.ndarray,
+    mps_vec: QiskitMPS,
+    *,
+    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
 ) -> QiskitMPS:
     """
     Multiplies circuit matrix by the right-hand side vector: ``out = V @ vec``.
@@ -502,11 +513,11 @@ def v_mul_mps(
 
 
 def v_dagger_mul_mps(
-        circ: ParametricCircuit,
-        thetas: np.ndarray,
-        mps_vec: QiskitMPS,
-        *,
-        trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+    circ: ParametricCircuit,
+    thetas: np.ndarray,
+    mps_vec: QiskitMPS,
+    *,
+    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
 ) -> QiskitMPS:
     """
     Multiplies conjugate-transposed circuit matrix by right-hand side vector:

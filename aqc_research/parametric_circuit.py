@@ -16,8 +16,10 @@ a parametric ansatz.
 """
 
 from abc import ABC
-from typing import Optional, Union, Tuple
+from typing import Optional, Tuple, Union
+
 import numpy as np
+
 import aqc_research.checking as chk
 
 

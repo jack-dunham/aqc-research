@@ -18,20 +18,20 @@ objective in the form of dot product. State vectors are assumed in MPS format.
 # Instance of 'QuantumCircuit' has no 'set_matrix_product_state' memberPylint(E1101:no-member)
 
 import copy
-from typing import Optional, Tuple, Callable
 from functools import partial
+from typing import Optional, Tuple
+
 import numpy as np
 from qiskit import QuantumCircuit
-from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
+
 import aqc_research.checking as chk
 from aqc_research.mps_operations import (
     QiskitMPS,
-    mps_from_circuit,
     mps_dot,
+    mps_from_circuit,
     no_truncation_threshold,
-    check_mps,
 )
-
+from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 
 # -----------------------------------------------------------------------------
 # Fast MPS gradient implementation.

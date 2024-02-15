@@ -14,19 +14,21 @@
 Generic useful utilities.
 """
 
-import sys
-import os
-import traceback
+import datetime
 import inspect
 import logging
-import datetime
-import shutil
 import numbers
-from pprint import pprint, pformat
+import os
+import shutil
+import sys
+import traceback
+from pprint import pformat, pprint
 from time import perf_counter
-from typing import Optional, Callable, Any, List, Dict, Union
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
+
 import aqc_research.checking as chk
 
 

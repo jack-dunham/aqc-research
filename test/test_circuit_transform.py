@@ -14,15 +14,17 @@
 Tests for the module 'circuit_transform.py'.
 """
 
+import test.utils_for_testing as tut
 import unittest
 from time import perf_counter
+
 import numpy as np
-from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
-import aqc_research.utils as helper
-import test.utils_for_testing as tut
+
 import aqc_research.circuit_transform as ctr
-from aqc_research.job_executor import run_jobs
+import aqc_research.utils as helper
 from aqc_research.circuit_structures import make_trotter_like_circuit
+from aqc_research.job_executor import run_jobs
+from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 
 
 class TestCircuitTransforms(unittest.TestCase):

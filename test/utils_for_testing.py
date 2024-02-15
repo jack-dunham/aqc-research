@@ -15,8 +15,10 @@ Utility functions for debugging and testing.
 """
 
 from typing import Tuple
+
 import numpy as np
 from scipy.stats import unitary_group
+
 import aqc_research.checking as chk
 
 

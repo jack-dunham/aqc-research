@@ -18,23 +18,25 @@ or Numpy matrix.
 to conform to Qiskit convention.
 """
 
-from typing import Optional, Callable
+from typing import Callable, Optional
+
 import numpy as np
-from qiskit import QuantumCircuit
 import qiskit.quantum_info as qinfo
+from qiskit import QuantumCircuit
+
 import aqc_research.checking as chk
-from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
-from aqc_research.core_op_matrix import v_mul_mat
 import aqc_research.core_operations as cop
+from aqc_research.core_op_matrix import v_mul_mat
 from aqc_research.elementary_operations import (
+    np_block_matrix,
+    np_phase,
     np_rx,
     np_ry,
     np_rz,
-    np_phase,
     np_x,
     np_z,
-    np_block_matrix,
 )
+from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 
 
 def qcircuit_to_state(qc: QuantumCircuit) -> np.ndarray:

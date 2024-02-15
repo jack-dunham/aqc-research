@@ -15,7 +15,9 @@ Elementary functions required by AQC parametric circuit.
 """
 
 import cmath
+
 import numpy as np
+
 import aqc_research.checking as chk
 
 # Real and complex types we want to use with PyTorch: either float32 or float64.

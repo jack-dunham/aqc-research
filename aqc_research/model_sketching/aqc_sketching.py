@@ -18,18 +18,20 @@ in its columns. When ``Q = I`` it is just a full AQC problem.
 """
 
 import logging
-from typing import Optional, Callable, Union
 import time
+from typing import Callable, Optional, Union
+
 import numpy as np
-from scipy.stats import truncnorm
 import qiskit.algorithms.optimizers as optim
-import aqc_research.utils as helper
-from aqc_research.circuit_transform import ansatz_to_numpy_fast
+from scipy.stats import truncnorm
+
 import aqc_research.checking as chk
-from aqc_research.job_executor import run_jobs
 import aqc_research.model_sketching.sk_core as skc
 import aqc_research.model_sketching.sk_utils as sku
 import aqc_research.optimizer as aqcopt
+import aqc_research.utils as helper
+from aqc_research.circuit_transform import ansatz_to_numpy_fast
+from aqc_research.job_executor import run_jobs
 
 
 def _full_aqc(*, maxiter: int, thetas_0: np.ndarray, objv: skc.SketchingObjectiveEx) -> dict:

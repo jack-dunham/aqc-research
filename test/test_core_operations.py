@@ -16,18 +16,18 @@ Tests for the module 'core_operations.py'.
 Qiskit convention through the function ``bit2bit_transform()``.
 """
 
+import test.utils_for_testing as tut
 import unittest
 from unittest import TestCase
 
 import numpy as np
 from qiskit import QuantumCircuit
-from qiskit.circuit.library import RZGate, RYGate
+from qiskit.circuit.library import RYGate, RZGate
 from qiskit.quantum_info import Operator
 
 import aqc_research.circuit_transform as ctr
 import aqc_research.core_operations as cop
 import aqc_research.utils as helper
-import test.utils_for_testing as tut
 from aqc_research.circuit_structures import make_trotter_like_circuit
 from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 

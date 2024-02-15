@@ -15,9 +15,10 @@ Plotting functions for numerical experiments.
 """
 
 import os
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
 import numpy as np
-from matplotlib import rcParams, checkdep_usetex
+from matplotlib import checkdep_usetex, rcParams
 
 rcParams["font.size"] = 12
 _USETEX = checkdep_usetex(True)

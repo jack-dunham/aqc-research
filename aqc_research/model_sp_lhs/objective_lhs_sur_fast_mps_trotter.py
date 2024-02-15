@@ -22,19 +22,21 @@ Most notably:
 3) implementation is based on accelerated MPS objective.
 """
 
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
 import numpy as np
+
+import aqc_research.model_sp_lhs.objective_base as obj_base
+import aqc_research.mps_operations as mpsop
+import aqc_research.utils as helper
+from aqc_research.mps_dot_objective import fast_dot_gradient
+from aqc_research.optimizer import GradientAmplifier
 from aqc_research.parametric_circuit import (
     ParametricCircuit,
     TrotterAnsatz,
-    layer_to_block_range,
     first_layer_included,
+    layer_to_block_range,
 )
-import aqc_research.utils as helper
-import aqc_research.mps_operations as mpsop
-from aqc_research.mps_dot_objective import fast_dot_gradient
-import aqc_research.model_sp_lhs.objective_base as obj_base
-from aqc_research.optimizer import GradientAmplifier
 
 _logger = helper.create_logger(__file__)
 

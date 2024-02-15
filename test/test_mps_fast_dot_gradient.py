@@ -16,6 +16,7 @@ vectors in MPS format, where the objective function is defined as a dot product
 ``<0|V.H|phi>``, where ``V`` is the matrix of ansatz.
 """
 
+import test.utils_dot_gradient_test as gradtest
 import unittest
 from typing import Optional, Tuple
 from unittest import TestCase
@@ -27,8 +28,7 @@ import aqc_research.checking as chk
 import aqc_research.mps_dot_objective as mpsobj
 import aqc_research.mps_operations as mpsop
 import aqc_research.utils as helper
-import test.utils_dot_gradient_test as gradtest
-from aqc_research.circuit_transform import qcircuit_to_matrix, ansatz_to_qcircuit
+from aqc_research.circuit_transform import ansatz_to_qcircuit, qcircuit_to_matrix
 from aqc_research.job_executor import run_jobs
 from aqc_research.parametric_circuit import ParametricCircuit
 

@@ -23,10 +23,12 @@ performance.
 
 
 from typing import Optional
+
 import numpy as np
+
 import aqc_research.checking as chk
-from aqc_research.parametric_circuit import ParametricCircuit
 from aqc_research.elementary_operations import make_rx, make_ry, make_rz
+from aqc_research.parametric_circuit import ParametricCircuit
 
 
 def rx_mul_mat(

@@ -14,21 +14,22 @@
 Tests the module 'core_op_matrix.py'.
 """
 
-from typing import List, Tuple
+import test.utils_for_testing as tut
 import unittest
+from typing import List, Tuple
 from unittest import TestCase
 
 import numpy as np
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import Operator
-from qiskit.circuit.library import RZGate, RYGate
 import qiskit.quantum_info as qinfo
+from qiskit import QuantumCircuit
+from qiskit.circuit.library import RYGate, RZGate
+from qiskit.quantum_info import Operator
+
+import aqc_research.checking as chk
+import aqc_research.circuit_transform as ctr
+import aqc_research.core_op_matrix as cop
 import aqc_research.utils as helper
 from aqc_research.parametric_circuit import ParametricCircuit
-import test.utils_for_testing as tut
-import aqc_research.core_op_matrix as cop
-import aqc_research.circuit_transform as ctr
-import aqc_research.checking as chk
 
 
 class TestCoreOperationsLevel2(TestCase):

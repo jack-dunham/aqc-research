@@ -17,7 +17,9 @@ Class keeps all user-supplied settings.
 import os
 import time
 from typing import Any, Optional
+
 import numpy as np
+
 import aqc_research.model_sp_lhs.trotter.trotter as trotop
 from aqc_research.mps_operations import no_truncation_threshold
 

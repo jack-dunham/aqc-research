@@ -29,34 +29,36 @@ in order to save computation time.
 import os
 import pickle
 import time
-from typing import Tuple, Union, Optional
 from pprint import pformat
+from typing import Optional, Tuple, Union
+
 import numpy as np
-import aqc_research.utils as helper
+
 import aqc_research.checking as chk
+import aqc_research.model_sp_lhs.trotter.trotter as trotop
+import aqc_research.model_sp_lhs.trotter.trotter_evol_utils as trot_utils
+import aqc_research.optimizer as optim
+import aqc_research.utils as helper
+from aqc_research.circuit_structures import make_trotter_like_circuit
 from aqc_research.model_sp_lhs.objective_base import SpLHSObjectiveBase
-from aqc_research.model_sp_lhs.objective_lhs_sur_max import SpSurrogateObjectiveMax
 from aqc_research.model_sp_lhs.objective_lhs_sur_fast_mps_trotter import (
     SpSurrogateObjectiveFastMpsTrotter,
 )
-import aqc_research.optimizer as optim
-from aqc_research.circuit_structures import make_trotter_like_circuit
-from aqc_research.parametric_circuit import (
-    TrotterAnsatz,
-    layer_to_block_range,
-    first_layer_included,
-)
-import aqc_research.model_sp_lhs.trotter.trotter as trotop
+from aqc_research.model_sp_lhs.objective_lhs_sur_max import SpSurrogateObjectiveMax
 from aqc_research.model_sp_lhs.trotter.target_states import (
     TargetClassicState,
     TargetMpsState,
     get_target_states,
 )
-import aqc_research.model_sp_lhs.trotter.trotter_evol_utils as trot_utils
-from aqc_research.model_sp_lhs.trotter.trotter_plots import plot_fidelity_profiles
-from aqc_research.mps_operations import QiskitMPS, no_truncation_threshold
 from aqc_research.model_sp_lhs.trotter.trotter import fidelity
+from aqc_research.model_sp_lhs.trotter.trotter_plots import plot_fidelity_profiles
 from aqc_research.model_sp_lhs.user_options import UserOptions
+from aqc_research.mps_operations import QiskitMPS, no_truncation_threshold
+from aqc_research.parametric_circuit import (
+    TrotterAnsatz,
+    first_layer_included,
+    layer_to_block_range,
+)
 
 _logger = helper.create_logger(__file__)
 

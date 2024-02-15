@@ -15,6 +15,8 @@ Gradient test for the classical approach with the full state vectors,
 where the objective function is defined as a dot product ``<x|V.H|y>``.
 """
 
+import test.utils_dot_gradient_test as gradtest
+import test.utils_for_testing as tut
 import unittest
 from typing import Optional, Tuple
 from unittest import TestCase
@@ -24,8 +26,6 @@ import numpy as np
 import aqc_research.checking as chk
 import aqc_research.circuit_transform as ctr
 import aqc_research.core_operations as cop
-import test.utils_dot_gradient_test as gradtest
-import test.utils_for_testing as tut
 from aqc_research.job_executor import run_jobs
 from aqc_research.parametric_circuit import ParametricCircuit
 

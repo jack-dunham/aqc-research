@@ -22,14 +22,16 @@ is computed  without phase factor (ansatz and targets), this step can be
 postponed until ansatz optimization is done.
 """
 
-from typing import Union, Tuple, Optional
+from typing import Optional, Tuple, Union
+
 import numpy as np
-from scipy.linalg import expm
 from qiskit import QuantumCircuit
+from scipy.linalg import expm
+
 import aqc_research.checking as chk
-import aqc_research.utils as helper
-from aqc_research.circuit_transform import qcircuit_to_state, qcircuit_to_matrix
 import aqc_research.mps_operations as mpsop
+import aqc_research.utils as helper
+from aqc_research.circuit_transform import qcircuit_to_matrix, qcircuit_to_state
 from aqc_research.parametric_circuit import (
     ParametricCircuit,
     TrotterAnsatz,

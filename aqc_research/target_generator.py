@@ -16,16 +16,18 @@ Generators of target states and unitary matrices.
 
 from time import perf_counter
 from typing import List
+
 import numpy as np
-from scipy.stats import unitary_group
-from scipy.linalg import expm as matrix_exp
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import Operator
 from qiskit.circuit.library import QFT
-from aqc_research.parametric_circuit import ParametricCircuit
-import aqc_research.utils as utl
-import aqc_research.core_operations as cop
+from qiskit.quantum_info import Operator
+from scipy.linalg import expm as matrix_exp
+from scipy.stats import unitary_group
+
 import aqc_research.checking as chk
+import aqc_research.core_operations as cop
+import aqc_research.utils as utl
+from aqc_research.parametric_circuit import ParametricCircuit
 
 _logger = utl.create_logger(__file__)
 

@@ -13,25 +13,25 @@
 """
 Tests correctness of our interpretation of Qiskit MPS implementation.
 """
+import test.utils_for_testing as tut
 import unittest
 from time import perf_counter
-from typing import List, Dict
+from typing import Dict, List
 from unittest import TestCase
 
 import numpy as np
 import pytest
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import partial_trace, Statevector, SparsePauliOp
 from qiskit.circuit.random import random_circuit
+from qiskit.quantum_info import SparsePauliOp, Statevector, partial_trace
 
 import aqc_research.circuit_transform as ctr
-from aqc_research.model_sp_lhs.trotter.trotter import trotter_circuit
 import aqc_research.mps_operations as mpsop
 import aqc_research.utils as helper
-import test.utils_for_testing as tut
 from aqc_research.circuit_structures import create_ansatz_structure
 from aqc_research.circuit_transform import ansatz_to_qcircuit
 from aqc_research.job_executor import run_jobs
+from aqc_research.model_sp_lhs.trotter.trotter import trotter_circuit
 from aqc_research.parametric_circuit import ParametricCircuit
 
 
@@ -66,7 +66,7 @@ class TestMPS(TestCase):
         tol = (2 ** max(num_qubits - 10, 0)) * self._tol
 
         # Generates a random state in MPS format.
-        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
         mps = mpsop.rand_mps_vec(num_qubits, out_state=state1)
         self.assertTrue(mpsop.check_mps(mps))
 
@@ -87,8 +87,8 @@ class TestMPS(TestCase):
         """Job function for the test_mps_dot()."""
         num_qubits = int(conf["num_qubits"])
         tol = (2 ** max(num_qubits - 10, 0)) * self._tol
-        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
-        state2 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state2 = np.zeros(2**num_qubits, dtype=np.cfloat)
 
         mps1 = mpsop.rand_mps_vec(num_qubits, out_state=state1)
         mps2 = mpsop.rand_mps_vec(num_qubits, out_state=state2)
@@ -135,7 +135,7 @@ class TestMPS(TestCase):
 
         # state1 <-- MPS(qc1) * MPS(qc0).
         mps0 = mpsop.mps_from_circuit(qcirc[0].copy())  # copy!
-        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
         tic = perf_counter()
         mpsop.qcircuit_mul_mps(qcirc[1].copy(), mps0, out_state=state1)  # copy!
         clock = perf_counter() - tic
@@ -165,7 +165,7 @@ class TestMPS(TestCase):
         blocks = tut.rand_circuit(num_qubits, np.random.randint(20, 50))
         circ = ParametricCircuit(num_qubits, entangler, blocks)
         thetas = helper.rand_thetas(circ.num_thetas)
-        vec = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+        vec = np.zeros(2**num_qubits, dtype=np.cfloat)
         mps_vec = mpsop.rand_mps_vec(num_qubits, out_state=vec)
 
         # vec2 = V @ V.H @ vec == vec.
@@ -207,15 +207,22 @@ class TestMPS(TestCase):
 
 class TestRDMFromMPS:
     @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
-    def test_given_random_state_when_partial_trace_on_random_subset_then_mps_method_matches_qiskit(self, num_qubits):
-        state1 = np.zeros(2 ** num_qubits, dtype=np.cfloat)
+    def test_given_random_state_when_partial_trace_on_random_subset_then_mps_method_matches_qiskit(
+        self, num_qubits
+    ):
+        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
         mps1 = mpsop.rand_mps_vec(num_qubits, out_state=state1)
-        qubits_to_keep = np.random.choice(range(num_qubits), size=np.random.randint(1, num_qubits), replace=False)
+        qubits_to_keep = np.random.choice(
+            range(num_qubits), size=np.random.randint(1, num_qubits), replace=False
+        )
         rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep)
         qubits_to_contract = [q for q in range(num_qubits) if q not in qubits_to_keep]
         rdm_qiskit = partial_trace(Statevector(state1), qubits_to_contract)
-        np.testing.assert_array_almost_equal(rdm_mps, rdm_qiskit.data,
-                                             err_msg="RDM as calculated by our MPS method should equal Qiskit RDM")
+        np.testing.assert_array_almost_equal(
+            rdm_mps,
+            rdm_qiskit.data,
+            err_msg="RDM as calculated by our MPS method should equal Qiskit RDM",
+        )
 
     @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
     def test_given_random_mps_when_partial_trace_on_all_qubits_then_equals_one(self, num_qubits):
@@ -226,38 +233,46 @@ class TestRDMFromMPS:
     @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
     def test_given_random_mps_when_partial_trace_random_subset_then_rdm_hermitian(self, num_qubits):
         mps1 = mpsop.rand_mps_vec(num_qubits)
-        qubits_to_keep = np.random.choice(range(num_qubits), size=np.random.randint(1, num_qubits), replace=False)
+        qubits_to_keep = np.random.choice(
+            range(num_qubits), size=np.random.randint(1, num_qubits), replace=False
+        )
         rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep=qubits_to_keep)
         np.testing.assert_array_almost_equal(rdm_mps, rdm_mps.conj().T)
 
     @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
-    def test_given_random_mps_when_partial_trace_random_subset_then_rdm_has_non_neg_eigenvalues(self, num_qubits):
+    def test_given_random_mps_when_partial_trace_random_subset_then_rdm_has_non_neg_eigenvalues(
+        self, num_qubits
+    ):
         mps1 = mpsop.rand_mps_vec(num_qubits)
-        qubits_to_keep = np.random.choice(range(num_qubits), size=np.random.randint(1, num_qubits), replace=False)
+        qubits_to_keep = np.random.choice(
+            range(num_qubits), size=np.random.randint(1, num_qubits), replace=False
+        )
         rdm_mps = mpsop.partial_trace(mps1, qubits_to_keep=qubits_to_keep)
         eigenvalues = np.linalg.eig(rdm_mps)[0].real
-        assert (np.all(eigenvalues >= -1e-10))
+        assert np.all(eigenvalues >= -1e-10)
 
 
 class TestExpectationFromMPS:
-    @pytest.mark.parametrize("op, expected", [('Z', 1), ('Y', 0), ('X', 0)])
+    @pytest.mark.parametrize("op, expected", [("Z", 1), ("Y", 0), ("X", 0)])
     def test_given_zero_state_mps_when_pauli_expectation_then_is_correct(self, op, expected):
         qc = QuantumCircuit(4)
         mps = mpsop.mps_from_circuit(qc)
         expectation = [mpsop.mps_expectation(mps, op, i) for i in range(4)]
         np.testing.assert_allclose(expectation, expected)
 
-    @pytest.mark.parametrize("op", ['Z', 'X', 'Y'])
+    @pytest.mark.parametrize("op", ["Z", "X", "Y"])
     def test_given_random_mps_when_pauli_expectation_then_matches_analytic(self, op):
         n = 4
-        state = np.zeros(2 ** n, dtype=np.cfloat)
+        state = np.zeros(2**n, dtype=np.cfloat)
         mps = mpsop.rand_mps_vec(n, out_state=state)
         mps_qubit_evals = [mpsop.mps_expectation(mps, op, i) for i in range(n)]
 
         # Construct single-qubit operator for all qubits
         ops = list(reversed([SparsePauliOp("I" * i + op + "I" * (n - i - 1)) for i in range(n)]))
 
-        analytic_qubit_evals = [np.real(np.dot(state.conj(), np.dot(op.to_matrix(), state))) for op in ops]
+        analytic_qubit_evals = [
+            np.real(np.dot(state.conj(), np.dot(op.to_matrix(), state))) for op in ops
+        ]
 
         np.testing.assert_allclose(mps_qubit_evals, analytic_qubit_evals)
 
@@ -270,7 +285,12 @@ class TestMaxChiFromCircuit:
             # any bond dimension data unless it sees a 2-qubit gate. This CNOT does not change the state.
             qc.cx(0, 1)
             for i in range(5):
-                qc.u(4*np.pi*np.random.random(), 2*np.pi*np.random.random(), 2*np.pi*np.random.random(), i)
+                qc.u(
+                    4 * np.pi * np.random.random(),
+                    2 * np.pi * np.random.random(),
+                    2 * np.pi * np.random.random(),
+                    i,
+                )
             assert mpsop.max_chi_from_circuit(qc) == 1
 
     def test_given_bell_state_when_max_chi_from_circuit_then_2(self):
@@ -281,8 +301,8 @@ class TestMaxChiFromCircuit:
 
     def test_given_N_qubit_rand_state_when_max_chi_from_circuit_then_bounded(self):
         for N in range(2, 10):
-            qc = random_circuit(N, 2*N)
-            assert mpsop.max_chi_from_circuit(qc) <= 2**(N/2)
+            qc = random_circuit(N, 2 * N)
+            assert mpsop.max_chi_from_circuit(qc) <= 2 ** (N / 2)
 
     def test_given_1_and_2_trotter_steps_when_max_chi_from_circuit_then_larger_for_2_steps(self):
         # This tests two things: a) entanglement grows with time and b) max_chi_from_circuit() is not returning the

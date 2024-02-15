@@ -19,11 +19,13 @@ entangling gate and four 1-qubit gates.
 positions of unit blocks in the circuit.
 """
 
-from typing import List, Optional
 from logging import Logger
+from typing import List, Optional
+
 import numpy as np
-from aqc_research.utils import create_logger
+
 import aqc_research.checking as chk
+from aqc_research.utils import create_logger
 
 _logger = create_logger(__file__)
 

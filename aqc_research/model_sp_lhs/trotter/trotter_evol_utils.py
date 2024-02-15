@@ -14,22 +14,24 @@
 Utility functions useful for running numerical experiments.
 """
 
+import datetime
 import os
 import pickle
-import datetime
-from pprint import pprint
-from typing import Any, List, Dict, Optional, Callable, Union
 from argparse import ArgumentParser
+from pprint import pprint
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
 from qiskit import QuantumCircuit
-import aqc_research.utils as helper
-import aqc_research.mps_operations as mpsop
+
 import aqc_research.checking as chk
-from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 import aqc_research.circuit_transform as ctr
+import aqc_research.mps_operations as mpsop
+import aqc_research.utils as helper
 from aqc_research.core_operations import v_mul_vec
 from aqc_research.model_sp_lhs.user_options import UserOptions
+from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 
 _logger = helper.create_logger(__file__)
 

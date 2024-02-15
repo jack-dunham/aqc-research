@@ -16,23 +16,28 @@ of accuracy metrics, storing the results into files and parsing the
 command-line arguments.
 """
 
-import os
-import time
-import pickle
 import logging
+import os
+import pickle
+import time
 from argparse import ArgumentParser
-from typing import Any, List, Dict, Tuple, Optional, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from sklearn.utils.extmath import randomized_svd  # faster than regular SVD
 from qiskit import QuantumCircuit
-from aqc_research.target_generator import available_target_matrix_types
-from aqc_research.parametric_circuit import ParametricCircuit
+from sklearn.utils.extmath import randomized_svd  # faster than regular SVD
+
 import aqc_research.checking as chk
 import aqc_research.circuit_transform as ctr
-from aqc_research.circuit_structures import create_ansatz_structure, num_blocks_per_layer
 import aqc_research.target_generator as targen
 import aqc_research.utils as helper
+from aqc_research.circuit_structures import (
+    create_ansatz_structure,
+    num_blocks_per_layer,
+)
+from aqc_research.parametric_circuit import ParametricCircuit
+from aqc_research.target_generator import available_target_matrix_types
 
 
 def _approximation_accuracy(

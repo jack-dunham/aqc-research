@@ -14,6 +14,7 @@
 Tests correctness of utilities defined in trotter_initial_point.py.
 """
 
+import test.utils_for_testing as tut
 import unittest
 from typing import Tuple
 from unittest import TestCase
@@ -23,9 +24,8 @@ from qiskit import QuantumCircuit
 
 import aqc_research.model_sp_lhs.trotter.trotter as trotop
 import aqc_research.utils as helper
-import test.utils_for_testing as tut
 from aqc_research.circuit_structures import make_trotter_like_circuit
-from aqc_research.circuit_transform import qcircuit_to_matrix, ansatz_to_qcircuit
+from aqc_research.circuit_transform import ansatz_to_qcircuit, qcircuit_to_matrix
 from aqc_research.job_executor import run_jobs
 from aqc_research.parametric_circuit import TrotterAnsatz
 

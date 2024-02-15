@@ -16,17 +16,19 @@ AQC* objective function: ``fobj = 1 - |<V(thetas),U>|^2 / dim^2``.
 """
 
 import logging
-from typing import Optional, Callable, Union
 import time
+from typing import Callable, Optional, Union
+
 import numpy as np
 from scipy.stats import truncnorm
-from aqc_research.circuit_transform import ansatz_to_numpy_fast
+
 import aqc_research.checking as chk
-from aqc_research.job_executor import run_jobs
-import aqc_research.utils as helper
 import aqc_research.model_sketching.sk_utils as sku
 import aqc_research.optimizer as aqcopt
+import aqc_research.utils as helper
+from aqc_research.circuit_transform import ansatz_to_numpy_fast
 from aqc_research.core_op_matrix import coord_descent_single_sweep
+from aqc_research.job_executor import run_jobs
 
 
 def _single_simulation(job_index: int, config: dict) -> dict:

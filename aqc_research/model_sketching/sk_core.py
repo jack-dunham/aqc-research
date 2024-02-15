@@ -15,20 +15,22 @@ Core classes and routines needed to implement the full and sketched approaches
 to approximate quantum compiling.
 """
 
-from time import perf_counter
-from abc import ABC, abstractmethod
-from typing import Tuple, Union, Optional
 import logging
+from abc import ABC, abstractmethod
+from time import perf_counter
+from typing import Optional, Tuple, Union
+
 import numpy as np
-from aqc_research.parametric_circuit import ParametricCircuit
+
 import aqc_research.checking as chk
-from aqc_research.core_op_matrix import v_dagger_mul_mat, grad_of_matrix_dot_product
+from aqc_research.core_op_matrix import grad_of_matrix_dot_product, v_dagger_mul_mat
 from aqc_research.optimizer import (
     GradientAmplifier,
-    TimeoutStopper,
     NotImproveStopper,
     SmallObjectiveStopper,
+    TimeoutStopper,
 )
+from aqc_research.parametric_circuit import ParametricCircuit
 
 
 class SketchingVectorsBase(ABC):
@@ -294,7 +296,6 @@ class SketchingObjectiveEx:
 
     def set_status_trackers(self, timeout, stopper):
         """Compatibility function for AqcOptimizer class."""
-        pass
 
 
 class FullRangeSketchingVectors(SketchingVectorsBase):

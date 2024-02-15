@@ -17,14 +17,16 @@ flip-states or |0>, which makes up the second term in the objective function.
 This is a classical approach where states are defined as full vectors.
 """
 
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
 import numpy as np
-import aqc_research.utils as helper
+
+import aqc_research.checking as chk
 import aqc_research.core_operations as cop
 import aqc_research.model_sp_lhs.objective_base as obj_base
-from aqc_research.parametric_circuit import ParametricCircuit
-import aqc_research.checking as chk
+import aqc_research.utils as helper
 from aqc_research.optimizer import GradientAmplifier
+from aqc_research.parametric_circuit import ParametricCircuit
 
 _logger = helper.create_logger(__file__)
 
