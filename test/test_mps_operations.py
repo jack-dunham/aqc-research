@@ -21,7 +21,8 @@ from unittest import TestCase
 
 import numpy as np
 import pytest
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
+from qiskit.quantum_info import partial_trace, Statevector, SparsePauliOp
 from qiskit.circuit.random import random_circuit
 from qiskit.quantum_info import SparsePauliOp, Statevector, partial_trace
 
@@ -326,6 +327,78 @@ class TestMaxChiFromCircuit:
         max_chi_1 = mpsop.max_chi_from_circuit(qc1)
 
         assert max_chi_2 > max_chi_1
+
+
+class TestAlreadyPreprocessedFunctionality(TestCase):
+    basis_gates = ["cx", "rx", "ry", "rz"]
+
+    def test_when_mps_from_circuit_with_preprocessed_flag_then_output_not_QiskitMPS(self):
+
+        qc = random_circuit(2, 2)
+        qc = transpile(qc, basis_gates=self.basis_gates)
+        preprocessed_mps = mpsop.mps_from_circuit(qc, return_preprocessed=True)
+        self.assertIsInstance(preprocessed_mps, list)
+        self.assertIsInstance(preprocessed_mps[0], np.ndarray)
+
+    def test_given_already_preprocessed_mps_when_mps_to_vector_then_output_as_expected(self):
+        qc = random_circuit(5, 5)
+        qc = transpile(qc, basis_gates=self.basis_gates)
+
+        vec1 = mpsop.mps_to_vector(mpsop.mps_from_circuit(qc.copy()))
+        vec2 = mpsop.mps_to_vector(
+            mpsop.mps_from_circuit(qc.copy(), return_preprocessed=True),
+            already_preprocessed=True
+        )
+
+        np.testing.assert_array_equal(vec1, vec2)
+
+    def test_given_already_preprocessed_mps_when_mps_dot_then_output_as_expected(self):
+        qc1 = random_circuit(5, 5)
+        qc2 = random_circuit(5, 5)
+        qc1 = transpile(qc1, basis_gates=self.basis_gates)
+        qc2 = transpile(qc2, basis_gates=self.basis_gates)
+
+        dot = mpsop.mps_dot(mpsop.mps_from_circuit(qc1.copy()), mpsop.mps_from_circuit(qc2.copy()))
+        dot_preprocessed = mpsop.mps_dot(
+            mpsop.mps_from_circuit(qc1.copy(), return_preprocessed=True),
+            mpsop.mps_from_circuit(qc2.copy(), return_preprocessed=True),
+            already_preprocessed=True)
+
+        self.assertEqual(dot, dot_preprocessed)
+
+class TestAlreadyPreprocessedFunctionalityParameterized:
+
+    @pytest.mark.parametrize("op", ['Z', 'Y', 'X'])
+    @pytest.mark.parametrize("index", list(range(5)))
+    def test_given_already_preprocessed_mps_when_mps_expectation_then_output_as_expected(self, op, index):
+        qc = random_circuit(5, 5)
+        qc = transpile(qc, basis_gates=['cx', 'rx', 'ry', 'rz'])
+
+        expectation = mpsop.mps_expectation(mpsop.mps_from_circuit(qc.copy()), op, index)
+        expectation_preprocessed = mpsop.mps_expectation(
+            mpsop.mps_from_circuit(qc.copy(), return_preprocessed=True),
+            op,
+            index,
+            already_preprocessed=True
+        )
+
+        np.testing.assert_equal(expectation, expectation_preprocessed)
+
+    @pytest.mark.parametrize("index_1", list(range(5)))
+    @pytest.mark.parametrize("index_2", list(range(5)))
+    def test_given_already_preprocessed_mps_when_partial_trace_then_output_as_expected(self, index_1, index_2):
+        qc = random_circuit(5, 5)
+        qc = transpile(qc, basis_gates=['cx', 'rx', 'ry', 'rz'])
+
+        if index_2 > index_1:
+            rdm = mpsop.partial_trace(mpsop.mps_from_circuit(qc.copy()), [index_1, index_2])
+            rdm_preprocessed = mpsop.partial_trace(
+                mpsop.mps_from_circuit(qc.copy(), return_preprocessed=True),
+                [index_1, index_2],
+                already_preprocessed=True
+            )
+
+            np.testing.assert_array_equal(rdm, rdm_preprocessed)
 
 
 if __name__ == "__main__":

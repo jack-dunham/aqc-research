@@ -163,7 +163,9 @@ def _preprocess_mps(qiskit_mps: QiskitMPS, conjugate: bool = False) -> List[np.n
     return my_mps
 
 
-def mps_to_vector(qiskit_mps: QiskitMPS) -> np.ndarray:
+def mps_to_vector(
+    qiskit_mps: QiskitMPS, already_preprocessed: Optional[bool] = False
+) -> np.ndarray:
     """
     Computes coefficients ``coef`` of individual quantum basis states:
     ``coef_{i1,i2,...,in} * |i1> kron |i2> kron ... kron |in>``, and
@@ -174,11 +176,16 @@ def mps_to_vector(qiskit_mps: QiskitMPS) -> np.ndarray:
 
     Args:
         qiskit_mps: MPS decomposition of the state produced by Qiskit framework.
+        already_preprocessed: Set to True if qiskit_mps has been preprocessed already
 
     Returns:
         quantum state as a vector of size ``2^n``.
     """
-    mps = _preprocess_mps(qiskit_mps)
+    if already_preprocessed:
+        mps = qiskit_mps
+    else:
+        mps = _preprocess_mps(qiskit_mps)
+
     num_qubits = len(mps)
     state = np.zeros(2**num_qubits, dtype=np.cfloat)
     for k in range(state.size):  # for all combinations of individual bits ...
@@ -197,7 +204,7 @@ def mps_to_vector(qiskit_mps: QiskitMPS) -> np.ndarray:
 
 
 def mps_dot(
-    qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS, already_preprocessed: bool = False
+    qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS, already_preprocessed: Optional[bool] = False
 ) -> np.cfloat:
     """
     Computes dot product between MPS decompositions of two quantum states:
@@ -206,6 +213,7 @@ def mps_dot(
     Args:
         qiskit_mps1: MPS decomposition of the left state.
         qiskit_mps2: MPS decomposition of the right state.
+        already_preprocessed: Set to True if mps1 and mps2 have been preprocessed already
 
     Returns:
         complex dot product value.
@@ -226,13 +234,21 @@ def mps_dot(
     return np.cfloat(a_b.item())
 
 
-def mps_expectation(qiskit_mps: QiskitMPS, operator: str, qubit_index: int):
+def mps_expectation(
+    qiskit_mps: QiskitMPS,
+    operator: str,
+    qubit_index: int,
+    already_preprocessed: Optional[bool] = False,
+):
     """
     Computes expectation of a Pauli operator (P) for a given qubit:
     ``< mps | P | mps >``.
 
     Args:
         qiskit_mps: MPS decomposition of the state.
+        operator: 'X', 'Y' or 'Z': the Pauli operator P
+        qubit_index: the qubit that P acts on
+        already_preprocessed: Set to True if qiskit_mps has been preprocessed already
 
     Returns:
         real expectation value.
@@ -249,7 +265,10 @@ def mps_expectation(qiskit_mps: QiskitMPS, operator: str, qubit_index: int):
     elif operator == "Z":
         op = Z
 
-    mat1, mat2 = _preprocess_mps(qiskit_mps), _preprocess_mps(qiskit_mps)
+    if already_preprocessed:
+        mat1, mat2 = qiskit_mps.copy(), qiskit_mps.copy()
+    else:
+        mat1, mat2 = _preprocess_mps(qiskit_mps), _preprocess_mps(qiskit_mps)
 
     # Apply op (Pauli X, Y, or Z) to qubit 'qubit_index'
     mat2[qubit_index] = np.tensordot(op, mat2[qubit_index], axes=([1], [0]))
@@ -261,15 +280,21 @@ def mps_expectation(qiskit_mps: QiskitMPS, operator: str, qubit_index: int):
     return np.real(expectation)
 
 
-def partial_trace(qiskit_mps: QiskitMPS, qubits_to_keep: List):
+def partial_trace(
+    qiskit_mps: QiskitMPS, qubits_to_keep: List, already_preprocessed: Optional[bool] = False
+):
     """
     Given a system of qubits described by a density matrix ⍴_AB, take the partial trace with respect
     to B to obtain the reduced density matrix ⍴_A = tr_B(⍴_AB) = ∑_i\inb ⟨i|⍴_AB|i⟩
     :param qiskit_mps: MPS in the form outputted from Qiskit
     :param qubits_to_keep: List of qubits in A such that all other qubits are traced over
+    :param already_preprocessed: Set to True if qiskit_mps has been preprocessed already
     :return: Reduced density matrix ⍴_A
     """
-    mat1 = _preprocess_mps(qiskit_mps)
+    if already_preprocessed:
+        mat1 = qiskit_mps
+    else:
+        mat1 = _preprocess_mps(qiskit_mps)
 
     n_qubits = len(mat1)
     qubits_to_contract = [q for q in range(n_qubits) if q not in qubits_to_keep]
@@ -325,6 +350,7 @@ def mps_from_circuit(
     trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
     out_state: Optional[np.ndarray] = None,
     print_log_data: Optional[bool] = False,
+    return_preprocessed: Optional[bool] = False,
 ) -> QiskitMPS:
     """
     Computes MPS representation of output state (in Qiskit format) after quantum
@@ -342,6 +368,7 @@ def mps_from_circuit(
                    for the large number of qubits; useful for testing only.
         print_log_data: flag enables printing of MPS internal information;
                         useful for debugging and testing.
+        return_preprocessed: set to True to return preprocessed MPS
 
     Returns:
         MPS state representation as outputted by Qiskit framework.
@@ -372,7 +399,10 @@ def mps_from_circuit(
     if isinstance(out_state, np.ndarray):
         np.copyto(out_state, np.asarray(data["my_sv"]))
 
-    return data["my_mps"]
+    if return_preprocessed:
+        return _preprocess_mps(data["my_mps"])
+    else:
+        return data["my_mps"]
 
 
 def max_chi_from_circuit(
