@@ -13,7 +13,7 @@
 """Approximate Quantum Compiling Research."""
 
 __copyright__ = "(C) Copyright IBM 2024"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 __all__ = [
