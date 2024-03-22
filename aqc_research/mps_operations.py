@@ -35,6 +35,7 @@ from aqc_research.parametric_circuit import ParametricCircuit
 logger = logging.getLogger(__name__)
 
 _NO_TRUNCATION_THR = 1e-16
+default_sim_warning_logged = False
 
 # Type of MPS data as it outputted by Qiskit.
 QiskitMPS = Tuple[List[Tuple[np.ndarray, np.ndarray]], List[np.ndarray]]
@@ -348,9 +349,10 @@ def mps_from_circuit(
     qc: QuantumCircuit,
     *,
     trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
-    out_state: Optional[np.ndarray] = None,
-    print_log_data: Optional[bool] = False,
-    return_preprocessed: Optional[bool] = False,
+    out_state: np.ndarray | None = None,
+    print_log_data: bool = False,
+    return_preprocessed: bool = False,
+    sim: AerSimulator | None = None,
 ) -> QiskitMPS:
     """
     Computes MPS representation of output state (in Qiskit format) after quantum
@@ -369,6 +371,8 @@ def mps_from_circuit(
         print_log_data: flag enables printing of MPS internal information;
                         useful for debugging and testing.
         return_preprocessed: set to True to return preprocessed MPS
+        sim: instance of AerSimulator if you want to use a custom one. NOTE if sim is not None,
+        the parameters trunc_thr and print_log_data are ignored.
 
     Returns:
         MPS state representation as outputted by Qiskit framework.
@@ -381,12 +385,21 @@ def mps_from_circuit(
         qc.save_statevector(label="my_sv")
         assert chk.complex_1d(out_state, out_state.size == 2**qc.num_qubits)
 
+    if sim is None:
+        global default_sim_warning_logged
+        if not default_sim_warning_logged:
+            logger.warning(f"Default MPS simulator used with trunc_thr: {trunc_thr}")
+            default_sim_warning_logged = True
+        sim = AerSimulator(
+            method="matrix_product_state",
+            matrix_product_state_truncation_threshold=trunc_thr,
+            mps_log_data=print_log_data,
+        )
+    else:
+        assert isinstance(sim, AerSimulator)
+        assert sim.options.method == "matrix_product_state"
+
     qc.save_matrix_product_state(label="my_mps")
-    sim = AerSimulator(
-        method="matrix_product_state",
-        matrix_product_state_truncation_threshold=trunc_thr,
-        mps_log_data=print_log_data,
-    )
     result = sim.run(qc, shots=1).result()
     data = result.data(0)
 
@@ -409,6 +422,7 @@ def max_chi_from_circuit(
     qc: QuantumCircuit,
     *,
     trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
+    sim: AerSimulator | None = None,
 ) -> int:
     """
     Finds the maximum bond dimension at any stage of the computation when computing the MPS representation of output
@@ -417,12 +431,25 @@ def max_chi_from_circuit(
     Args:
         qc: quantum circuit that acts on state ``|0>``.
         trunc_thr: truncation threshold in MPS representation.
+        sim: instance of AerSimulator if you want to use a custom one. NOTE if sim is not None,
+        the parameters trunc_thr and print_log_data are ignored.
 
     Returns:
         Maximum bond dimension
     """
     assert isinstance(qc, QuantumCircuit)
     assert chk.is_float(trunc_thr, 0 <= trunc_thr <= 0.1)
+
+    if sim is None:
+        sim = AerSimulator(
+            method="matrix_product_state",
+            matrix_product_state_truncation_threshold=trunc_thr,
+            mps_log_data=True,
+        )
+    else:
+        assert isinstance(sim, AerSimulator)
+        assert sim.options.method == "matrix_product_state"
+        sim.options.mps_log_data = True
 
     qc_copy = qc.copy()
 
@@ -444,11 +471,6 @@ def max_chi_from_circuit(
     num_2_qubit_gates = qc_copy.count_ops()["cx"]
 
     qc_copy.save_matrix_product_state(label="my_mps")
-    sim = AerSimulator(
-        method="matrix_product_state",
-        matrix_product_state_truncation_threshold=trunc_thr,
-        mps_log_data=True,
-    )
     result = sim.run(qc_copy, shots=1).result()
 
     mps_log_string = result.results[0].metadata["MPS_log_data"]

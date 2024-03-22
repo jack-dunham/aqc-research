@@ -25,6 +25,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.quantum_info import partial_trace, Statevector, SparsePauliOp
 from qiskit.circuit.random import random_circuit
 from qiskit.quantum_info import SparsePauliOp, Statevector, partial_trace
+from qiskit_aer import AerSimulator
 
 import aqc_research.circuit_transform as ctr
 import aqc_research.mps_operations as mpsop
@@ -205,6 +206,18 @@ class TestMPS(TestCase):
         results = run_jobs(self._make_configs(), self._seed, self._job_v_mul_vec)
         self.assertTrue(all(r["status"] == "ok" for r in results))
 
+    def test_given_input_sim_same_as_default_when_mps_from_circuit_then_same_output(self):
+        qc = random_circuit(4, 4)
+        qc = transpile(qc, basis_gates=["cx", "rx", "ry", "rz"])
+        qc2 = qc.copy()
+
+        mps1 = mpsop.mps_from_circuit(qc)
+
+        SIM = AerSimulator(method="matrix_product_state")
+        mps2 = mpsop.mps_from_circuit(qc2, sim=SIM)
+
+        assert mps1 == mps2
+
 
 class TestRDMFromMPS:
     @pytest.mark.parametrize("num_qubits", list(range(2, 6)))
@@ -328,6 +341,16 @@ class TestMaxChiFromCircuit:
 
         assert max_chi_2 > max_chi_1
 
+    def test_given_input_sim_same_as_default_when_max_chi_from_circuit_then_same_output(self):
+        qc = random_circuit(4, 4)
+
+        chi1 = mpsop.max_chi_from_circuit(qc)
+
+        SIM = AerSimulator(method="matrix_product_state")
+        chi2 = mpsop.max_chi_from_circuit(qc, sim=SIM)
+
+        assert chi1 == chi2
+
 
 class TestAlreadyPreprocessedFunctionality(TestCase):
     basis_gates = ["cx", "rx", "ry", "rz"]
@@ -365,6 +388,7 @@ class TestAlreadyPreprocessedFunctionality(TestCase):
             already_preprocessed=True)
 
         self.assertEqual(dot, dot_preprocessed)
+
 
 class TestAlreadyPreprocessedFunctionalityParameterized:
 
