@@ -425,5 +425,47 @@ class TestAlreadyPreprocessedFunctionalityParameterized:
             np.testing.assert_array_equal(rdm, rdm_preprocessed)
 
 
+class TestExtractAmplitude(TestCase):
+
+    def test_given_random_state_extract_amplitude_works_for_all_basis_states(self):
+        n = 5
+        qc = random_circuit(n, n)
+        qc = transpile(qc, basis_gates=['cx', 'rx', 'ry', 'rz'])
+        sv = Statevector(qc)
+        mps = mpsop.mps_from_circuit(qc, return_preprocessed=True)
+
+        for i in range(2**n):
+            amplitude = mpsop.extract_amplitude(mps, i, already_preprocessed=True)
+            self.assertAlmostEqual(amplitude, sv[i], places=10)
+
+    def test_given_known_state_then_extract_amplitude_works(self):
+        qc = QuantumCircuit(2)
+        qc.x(0)
+        mps = mpsop.mps_from_circuit(qc, return_preprocessed=True)
+
+        a_00 = mpsop.extract_amplitude(mps, 0, already_preprocessed=True)
+        a_01 = mpsop.extract_amplitude(mps, 1, already_preprocessed=True)
+        a_10 = mpsop.extract_amplitude(mps, 2, already_preprocessed=True)
+        a_11 = mpsop.extract_amplitude(mps, 3, already_preprocessed=True)
+
+        self.assertEqual(a_00, 0)
+        self.assertEqual(a_01, 1)
+        self.assertEqual(a_10, 0)
+        self.assertEqual(a_11, 0)
+
+    def test_given_invalid_basis_state_then_extract_amplitude_throws_error(self):
+        qc = QuantumCircuit(3)
+        mps = mpsop.mps_from_circuit(qc, return_preprocessed=True)
+
+        # 0 (000) and 7 (111) should be valid
+        mpsop.extract_amplitude(mps, 0, True)
+        mpsop.extract_amplitude(mps, 7, True)
+        # -1 and 8 (1000) shouldn't be valid
+        with self.assertRaises(ValueError):
+            mpsop.extract_amplitude(mps, -1, True)
+        with self.assertRaises(ValueError):
+            mpsop.extract_amplitude(mps, 8, True)
+
+
 if __name__ == "__main__":
     unittest.main()

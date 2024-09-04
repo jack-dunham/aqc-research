@@ -203,6 +203,41 @@ def mps_to_vector(
 
     return state
 
+def extract_amplitude(
+    qiskit_mps: QiskitMPS, basis_state: int, already_preprocessed: Optional[bool] = False
+) -> np.ndarray:
+    """
+    Computes coefficient ``coef`` of individual quantum basis state:
+    ``coef_{i1,i2,...,in} * |i1> kron |i2> kron ... kron |in>``.
+
+    Args:
+        qiskit_mps: MPS decomposition of the state produced by Qiskit framework.
+        basis_state: Integer representation of binary computational basis state: i.e. 6 := |110>
+        already_preprocessed: Set to True if qiskit_mps has been preprocessed already.
+
+    Returns:
+        individual amplitide of ``qiskit_mps`` in ``basis_state``.
+    """
+    if already_preprocessed:
+        mps = qiskit_mps
+    else:
+        mps = _preprocess_mps(qiskit_mps)
+
+    num_qubits = len(mps)
+
+    if basis_state >= 2 ** num_qubits or basis_state < 0:
+        raise ValueError(f"{basis_state} is invalid for a {num_qubits}-qubit state")
+
+    for n in range(num_qubits):
+        b = (basis_state >> n) & 1  # k-th bit state (0/1) at qubit 'n'
+        g_n = mps[n][b, ...]  # Gamma at qubit 'n'
+        if n == 0:
+            coef = g_n.copy()
+        else:
+            coef = np.tensordot(coef, g_n, axes=([1], [0]))
+
+    return coef.item()
+
 
 def mps_dot(
     qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS, already_preprocessed: Optional[bool] = False
