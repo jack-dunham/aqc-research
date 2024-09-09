@@ -15,6 +15,7 @@ Utilities for manipulating the state vectors in MPS format.
 """
 import logging
 import re
+import random
 from random import choice
 from typing import List, Optional, Tuple
 
@@ -555,6 +556,8 @@ def rand_mps_vec(
     num_qubits: int,
     out_state: Optional[np.ndarray] = None,
     num_layers: int = 3,
+    seed: Optional[int] = None,
+    trunc_thr: Optional[float] = _NO_TRUNCATION_THR,
 ) -> QiskitMPS:
     """
     Generates a random vector in MPS format.
@@ -569,11 +572,13 @@ def rand_mps_vec(
     """
     assert chk.is_int(num_qubits, num_qubits >= 2)
     assert chk.is_int(num_layers, num_layers > 0)
+    np.random.seed(seed)
+    random.seed(seed)
     blocks = create_ansatz_structure(num_qubits, "spin", "full", num_layers * (num_qubits - 1))
     circ = ParametricCircuit(num_qubits, choice(["cx", "cz", "cp"]), blocks)
     thetas = helper.rand_thetas(circ.num_thetas)
     qc = ansatz_to_qcircuit(circ, thetas)
-    return mps_from_circuit(qc, out_state=out_state)
+    return mps_from_circuit(qc, out_state=out_state, trunc_thr=trunc_thr)
 
 
 def v_mul_mps(
