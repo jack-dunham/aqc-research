@@ -558,3 +558,171 @@ def init_ansatz_to_trotter(
         th2q[0, 0:half, 6] = alphas[2]
 
     return thetas
+
+
+# XYZ model functions
+
+def make_xyz_hamiltonian(num_qubits: int, Jx: float, Jy: float, Jz: float, field: float = 0.0) -> np.ndarray:
+    """
+    Makes a Hamiltonian matrix. This function is used only for testing to ensure
+    generated Trotterized ansatz is consistent with Hamiltonian.
+
+    **Note**, here we use *half-spin* matrices.
+
+    **Remark**: it turns out the bit-ordering does not matter unless
+    Hamiltonian is asymmetric, which is *not* this case.
+
+    Args:
+        num_qubits: number of qubits.
+        Jx: Hamiltonian parameter.
+        Jy: Hamiltonian parameter.
+        Jz: Hamiltonian parameter.
+        field: parameter of the Hamiltonian - external field strength.
+
+    Returns:
+        Hamiltonian matrix.
+    """
+
+    def _full_matrix(_s_: np.ndarray, _j_: int) -> np.ndarray:
+        """Expands a 2x2 Pauli matrix into a full one."""
+        return np.kron(np.kron(np.eye(2**_j_), _s_), np.eye(2 ** (num_qubits - _j_ - 1)))
+
+    def _b2b(_i_: int) -> int:
+        """
+        Bit-to-bit conversion. See the remark in the parent function doc-string.
+        """
+        # return num_qubits - 1 - _i  # flip bit-ordering to conform to Qiskit
+        return _i_  # do nothing
+
+    sigmax = np.array([[0, 1], [1, 0]])
+    sigmay = np.array([[0, 0 - 1.0j], [1.0j, 0]], dtype=np.cfloat)
+    sigmaz = np.array([[1, 0], [0, -1]])
+
+    sx_ = [_full_matrix(sigmax, j) for j in range(num_qubits)]
+    sy_ = [_full_matrix(sigmay, j) for j in range(num_qubits)]
+    sz_ = [_full_matrix(sigmaz, j) for j in range(num_qubits)]
+
+    rng = range(num_qubits - 1)
+    sx_sx = [np.dot(sx_[_b2b(i)], sx_[_b2b(i + 1)]) for i in rng]
+    sy_sy = [np.dot(sy_[_b2b(i)], sy_[_b2b(i + 1)]) for i in rng]
+    sz_sz = [np.dot(sz_[_b2b(i)], sz_[_b2b(i + 1)]) for i in rng]
+
+    xterms = np.sum(sx_sx, axis=0)
+    yterms = np.sum(sy_sy, axis=0)
+    zterms = np.sum(sz_sz, axis=0)
+
+    hamiltonian = -0.25 * (Jx * xterms + Jy * yterms + Jz * zterms)  # interaction terms
+    hamiltonian -= 0.5 * field * np.sum(sz_, axis=0)  # add external field terms
+    return hamiltonian
+
+
+def xyz_trotter_alphas(dt: float, Jx: float, Jy: float, Jz: float) -> np.ndarray:
+    """
+    Computes 3 angular parameters (``alphas``) of a Trotter building block.
+
+    Args:
+        dt: time step in Trotter algorithm.
+        Jx: Hamiltonian parameter.
+        Jy: Hamiltonian parameter.
+        Jz: Hamiltonian parameter.
+
+    Returns:
+        angular parameters of Trotter building block.
+    """
+    assert chk.is_float(dt)
+    assert chk.is_float(Jx)
+    assert chk.is_float(Jy)
+    assert chk.is_float(Jz)
+
+    return np.asarray([np.pi / 2 - 0.5 * Jz * dt, 0.5 * Jx * dt - np.pi / 2, np.pi / 2 - 0.5 * Jy * dt])
+
+
+def xyz_trotter_circuit(
+    qc: QuantumCircuit,
+    *,
+    dt: float,
+    Jx: float,
+    Jy: float,
+    Jz: float,
+    field: float = 0.0,
+    num_trotter_steps: int,
+    second_order: bool,
+) -> QuantumCircuit:
+    """
+    Similar to trotter_circuit, but with a more general Hamiltonian
+
+    Generates a 1st or 2nd order Trotter circuit and adds it to the input one.
+    By definition, a single "Trotter step" is a full layer of elementary.
+    2-qubit Trotter blocks applied to every pair of adjacent qubits.
+    The parameter ``num_trotter_steps`` defines the number of layers in the
+    circuit. The parameter ``dt`` characterizes the evolution time per step
+    (layer). The total evolution time is equal to ``dt * num_trotter_steps``.
+
+    **Note**, 2nd order Trotter circuit comprises additional half-layer at the end.
+
+    **Note**, currently we ignore the global phase, see the remark at the
+    beginning of this script.
+
+    The Hamiltonian implemented is defined in terms of spin operators as:
+
+    H = - Sum(Jx * Sx_i ⛒ Sx_{i+1} + Jy * Sy_i ⛒ Sy_{i+1} + Jz * Sz_i ⛒ Sz_{i+1}) - field * Sum(Sz_i)
+
+    Or equivalently in terms of Pauli operators (e.g. X = Sx / 2)
+
+    H = -1/4 Sum(Jx * X_i ⛒ X_{i+1} + Jy * Y_i ⛒ Y_{i+1} + Jz * Z_i ⛒ Z_{i+1}) -1/2 field * Sum(Z_i)
+
+    Args:
+        qc: quantum circuit to be augmented by the Trotter one.
+        dt: evolution time per step (layer) in Trotter algorithm.
+        Jx: Hamiltonian parameter.
+        Jy: Hamiltonian parameter.
+        Jz: Hamiltonian parameter.
+        field: external field parameter of the corresponding Hamiltonian.
+        num_trotter_steps: number of Trotter steps (layers).
+        second_order: True, if the 2nd order Trotter is intended.
+
+    Returns:
+        quantum circuit augmented by the Trotter one.
+    """
+    assert isinstance(qc, QuantumCircuit) and qc.num_qubits > 0
+    assert chk.is_int(num_trotter_steps, num_trotter_steps > 0)
+
+    def _trotter_block(k: int, params: np.ndarray):
+        qc.rz(-np.pi / 2, k + 1)
+        qc.cx(k + 1, k)
+        qc.rz(params[0], k)
+        qc.ry(params[1], k + 1)
+        qc.cx(k, k + 1)
+        qc.ry(params[2], k + 1)
+        qc.cx(k + 1, k)
+        qc.rz(np.pi / 2, k)
+
+    # Compute Trotter parameters. In case of 2nd order, the first and the trail
+    # half-layers should be initialized differently ("betas").
+    alphas = xyz_trotter_alphas(dt, Jx, Jy, Jz)
+    betas = xyz_trotter_alphas(dt * 0.5, Jx, Jy, Jz)  # dt/2 (!) in first/last half-layers
+
+    # Build the main part of the 1st or 2nd order Trotter circuit.
+    for j in range(num_trotter_steps):
+        # 1st half of a layer: even terms
+        for q in range(0, qc.num_qubits - 1, 2):
+            _trotter_block(q, betas if second_order and j == 0 else alphas)
+
+        if field != 0:
+            for q in range(0, qc.num_qubits):
+                qc.rz(-field * dt / 2 if second_order else -field * dt, q)
+
+        # 2nd half of a layer: odd terms
+        for q in range(1, qc.num_qubits - 1, 2):
+            _trotter_block(q, alphas)
+
+        if field != 0 and second_order:
+            for q in range(0, qc.num_qubits):
+                qc.rz(-field * dt / 2, q)
+
+    # For 2nd order Trotter, we add an extra half-layer identical to the front one.
+    if second_order:
+        for q in range(0, qc.num_qubits - 1, 2):
+            _trotter_block(q, betas)
+
+    return qc

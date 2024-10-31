@@ -135,5 +135,39 @@ def test_given_trotter_circuit_when_converted_to_operator_then_matches_analytic(
     np.testing.assert_allclose(1.0, frob, rtol=1e-3, atol=1e-3)
 
 
+@pytest.mark.parametrize("num_qubits", [2, 3, 4, 5])
+@pytest.mark.parametrize("Jx", [-0.1, 1.0])
+@pytest.mark.parametrize("Jy", [-0.1, 1.0])
+@pytest.mark.parametrize("Jz", [-0.1, 1.0])
+@pytest.mark.parametrize("field", [0.0, 0.1, 1.0])
+@pytest.mark.parametrize("second_order", [False, True])
+@pytest.mark.parametrize("dt", [0.1])
+@pytest.mark.parametrize("num_steps", [1, 10])
+def test_given_xyz_trotter_circuit_when_converted_to_operator_then_matches_analytic(
+    num_qubits, Jx, Jy, Jz, field, second_order, dt, num_steps
+):
+    # Exact unitary
+    evol_time = dt * num_steps
+    hamiltonian = trotop.make_xyz_hamiltonian(num_qubits, Jx, Jy, Jz, field)
+    desired = sp.linalg.expm(-1j * hamiltonian * evol_time)
+
+    # Unitary from a trotter circuit
+    qc = trotop.xyz_trotter_circuit(
+        QuantumCircuit(num_qubits),
+        dt=dt,
+        Jx=Jx,
+        Jy=Jy,
+        Jz=Jz,
+        field=field,
+        num_trotter_steps=num_steps,
+        second_order=second_order,
+    )
+    actual = qinfo.Operator(qc).data
+
+    # Compute Frobenius product
+    frob = np.abs(np.trace(actual.conj().T @ desired)) / 2**num_qubits
+    np.testing.assert_allclose(1.0, frob, rtol=1e-3, atol=1e-3)
+
+
 if __name__ == "__main__":
     unittest.main()
