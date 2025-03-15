@@ -575,7 +575,7 @@ def rand_mps_vec(
     np.random.seed(seed)
     random.seed(seed)
     blocks = create_ansatz_structure(num_qubits, "spin", "full", num_layers * (num_qubits - 1))
-    circ = ParametricCircuit(num_qubits, choice(["cx", "cz", "cp"]), blocks)
+    circ = ParametricCircuit(num_qubits, choice(["cp"]), blocks)
     thetas = helper.rand_thetas(circ.num_thetas)
     qc = ansatz_to_qcircuit(circ, thetas)
     return mps_from_circuit(qc, out_state=out_state, trunc_thr=trunc_thr)
