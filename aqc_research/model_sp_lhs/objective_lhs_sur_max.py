@@ -76,7 +76,7 @@ class SpSurrogateObjectiveMax(obj_base.SpLHSObjectiveBase):
         self._grad_scaler = grad_scaler
 
         # Hilbert-Schmidt products <state|V.H|target> of the all states:
-        self._hs = np.zeros(self._num_states, dtype=np.cfloat)
+        self._hs = np.zeros(self._num_states, dtype=np.complex128)
 
         # Index of the state of maximal projection (max. HS product):
         self._max_no = int(0)

@@ -36,8 +36,8 @@ from aqc_research.parametric_circuit import ParametricCircuit, TrotterAnsatz
 _logger = helper.create_logger(__file__)
 
 # Projectors |0><0| and |1><1| respectively:
-_glo_mat00 = np.asarray([[1, 0], [0, 0]], dtype=np.cfloat)
-_glo_mat11 = np.asarray([[0, 0], [0, 1]], dtype=np.cfloat)
+_glo_mat00 = np.asarray([[1, 0], [0, 0]], dtype=np.complex128)
+_glo_mat11 = np.asarray([[0, 0], [0, 1]], dtype=np.complex128)
 
 
 def bit2bit_transform(n: int, i: int) -> int:
@@ -640,7 +640,7 @@ def v_mul_vec(
 
     b2b = bit2bit_transform  # shorthand alias
     blocks = circ.blocks
-    mat2 = np.zeros((2, 2, 2), dtype=np.cfloat)  # temporary 2x2 matrices
+    mat2 = np.zeros((2, 2, 2), dtype=np.complex128)  # temporary 2x2 matrices
     n = circ.num_qubits
     trotterized = isinstance(circ, TrotterAnsatz)
 
@@ -749,7 +749,7 @@ def v_dagger_mul_vec(
 
     b2b = bit2bit_transform  # shorthand alias
     blocks = circ.blocks
-    mat2 = np.zeros((2, 2, 2), dtype=np.cfloat)  # temporary 2x2 matrices
+    mat2 = np.zeros((2, 2, 2), dtype=np.complex128)  # temporary 2x2 matrices
     n = circ.num_qubits
     trotterized = isinstance(circ, TrotterAnsatz)
 
@@ -904,7 +904,7 @@ def grad_of_dot_product(
     z_vec = workspace[2]  # vector z, initially z = V.H @ y
 
     # Convenient split into parameter sub-sets for 1- and 2-qubit gates.
-    grad = np.zeros(circ.num_thetas, dtype=np.cfloat)
+    grad = np.zeros(circ.num_thetas, dtype=np.complex128)
     thetas1q, grad1q = circ.subset1q(thetas), circ.subset1q(grad)
     thetas2q, grad2q = circ.subset2q(thetas), circ.subset2q(grad)
 

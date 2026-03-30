@@ -32,7 +32,7 @@ def is_float(x: float, condition: bool = True) -> bool:
     return isinstance(x, (float, np.float32, np.float64)) and condition
 
 
-def is_complex(x: np.cfloat, condition: bool = True) -> bool:
+def is_complex(x: complex, condition: bool = True) -> bool:
     """Checks the variables is of type 'complex float'."""
     return isinstance(x, (complex, np.complex64, np.complex128)) and condition
 
@@ -187,7 +187,7 @@ def check_sim_complex_vecs4(
         and isinstance(d__, np.ndarray)
         and a__.ndim == 1
         and a__.shape == b__.shape == c__.shape == d__.shape
-        and a__.dtype == b__.dtype == c__.dtype == d__.dtype == np.cfloat
+        and a__.dtype == b__.dtype == c__.dtype == d__.dtype == np.complex128
         and a__.data.contiguous
         and b__.data.contiguous
         and c__.data.contiguous

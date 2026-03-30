@@ -46,7 +46,7 @@ def relative_diff(arr1: np.ndarray, arr2: np.ndarray) -> float:
     raise ValueError("expects matrices, vectors or scalars as an input")
 
 
-def hs_product(arr1: np.ndarray, arr2: np.ndarray) -> np.cfloat:
+def hs_product(arr1: np.ndarray, arr2: np.ndarray) -> np.complex128:
     """
     Computes Hilbert-Schmidt product between two vectors or matrices.
     In case of matrix inputs, we normalize the product such that its absolute
@@ -56,7 +56,7 @@ def hs_product(arr1: np.ndarray, arr2: np.ndarray) -> np.cfloat:
     assert arr1.shape == arr2.shape
     assert arr1.ndim == 1 or (arr1.ndim == 2 and arr1.shape[0] == arr1.shape[1])
     scale = float(arr1.shape[0]) if arr1.ndim == 2 else 1.0
-    return np.cfloat(np.vdot(arr1, arr2).item() / scale)
+    return np.complex128(np.vdot(arr1, arr2).item() / scale)
 
 
 class RelativeDiff:
@@ -129,7 +129,7 @@ def rand_vec(dim: int, unit: bool = False) -> np.ndarray:
         a random vector; normalized if ``unit`` is True.
     """
     assert chk.is_int(dim, dim > 0) and isinstance(unit, bool)
-    vec = np.random.rand(dim).astype(np.cfloat) + np.random.rand(dim).astype(np.cfloat) * 1j
+    vec = np.random.rand(dim).astype(np.complex128) + np.random.rand(dim).astype(np.complex128) * 1j
     if unit:
         vec /= max(np.linalg.norm(vec), np.finfo(np.float64).eps ** 2)
     return vec
@@ -149,8 +149,8 @@ def rand_mat(dim: int, kind: str = "complex") -> np.ndarray:
     assert chk.is_str(kind, kind in ["complex", "randint"])
     if kind == "complex":
         return (
-            np.random.rand(dim, dim).astype(np.cfloat)
-            + np.random.rand(dim, dim).astype(np.cfloat) * 1j
+            np.random.rand(dim, dim).astype(np.complex128)
+            + np.random.rand(dim, dim).astype(np.complex128) * 1j
         )
 
     return np.random.randint(low=1, high=100, size=(dim, dim), dtype=np.int64)

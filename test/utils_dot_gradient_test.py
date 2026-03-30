@@ -50,12 +50,12 @@ class BaseGradTestObjective(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def objective_from_matrix(self, thetas: np.ndarray) -> np.cfloat:
+    def objective_from_matrix(self, thetas: np.ndarray) -> np.complex128:
         """Computes objective from the circuit matrix built by Qiskit."""
         raise NotImplementedError()
 
     @abstractmethod
-    def objective(self, thetas: np.ndarray) -> np.cfloat:
+    def objective(self, thetas: np.ndarray) -> np.complex128:
         """Computes objective from parametric circuit directly."""
         raise NotImplementedError()
 
@@ -79,7 +79,7 @@ def _numerical_gradient(
     Computes numerical gradient of the objective function.
     """
     th_tau = thetas.copy()
-    grad = np.zeros(thetas.size, dtype=np.cfloat)
+    grad = np.zeros(thetas.size, dtype=np.complex128)
     for i in range(thetas.size):
         th_tau[i] = thetas[i] - tau
         f_m = objv_func(th_tau)

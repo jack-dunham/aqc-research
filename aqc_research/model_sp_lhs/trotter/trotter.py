@@ -219,7 +219,7 @@ def make_hamiltonian(num_qubits: int, delta: float, field: float = 0.0) -> np.nd
         return _i_  # do nothing
 
     sigmax = np.array([[0, 1], [1, 0]])
-    sigmay = np.array([[0, 0 - 1.0j], [1.0j, 0]], dtype=np.cfloat)
+    sigmay = np.array([[0, 0 - 1.0j], [1.0j, 0]], dtype=np.complex128)
     sigmaz = np.array([[1, 0], [0, -1]])
 
     sx_ = [_full_matrix(sigmax, j) for j in range(num_qubits)]
@@ -595,7 +595,7 @@ def make_xyz_hamiltonian(num_qubits: int, Jx: float, Jy: float, Jz: float, field
         return _i_  # do nothing
 
     sigmax = np.array([[0, 1], [1, 0]])
-    sigmay = np.array([[0, 0 - 1.0j], [1.0j, 0]], dtype=np.cfloat)
+    sigmay = np.array([[0, 0 - 1.0j], [1.0j, 0]], dtype=np.complex128)
     sigmaz = np.array([[1, 0], [0, -1]])
 
     sx_ = [_full_matrix(sigmax, j) for j in range(num_qubits)]

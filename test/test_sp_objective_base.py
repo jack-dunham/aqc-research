@@ -56,7 +56,7 @@ class TestSPObjectiveBase(TestCase):
 
                 # Check the state |0>.
                 sh_state = tsh.init_state(0)
-                self.assertTrue(sh_state.dtype == np.cfloat)
+                self.assertTrue(sh_state.dtype == np.complex128)
                 self.assertTrue(np.allclose(sh_state[0], 1, atol=tol, rtol=tol))
                 self.assertTrue(np.allclose(sh_state[1:], 0, atol=tol, rtol=tol))
 

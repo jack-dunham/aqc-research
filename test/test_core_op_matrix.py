@@ -130,7 +130,7 @@ class TestCoreOperationsLevel2(TestCase):
         if circ.entangler == "cp":
             circ.subset2q(cphase)[:, 4] = True  # at positions of CPhase parameter
         th_tau = thetas.copy()
-        grad = np.zeros(thetas.size, dtype=np.cfloat)
+        grad = np.zeros(thetas.size, dtype=np.complex128)
         for i in range(thetas.size):
             tau, scale = (np.pi / 2, 0.5) if cphase[i] else (np.pi, 0.25)
             th_tau[i] = thetas[i] - tau
@@ -147,7 +147,7 @@ class TestCoreOperationsLevel2(TestCase):
         """
         tol = self.tol
         for num_qubits in self._num_qubits_range():
-            workspace = np.zeros(4**num_qubits, dtype=np.cfloat)
+            workspace = np.zeros(4**num_qubits, dtype=np.complex128)
             for qubit_no in range(num_qubits):
                 mat = tut.rand_rect_mat(2**num_qubits, np.random.randint(1, 2**num_qubits))
                 angle = 2 * np.pi * np.random.rand()
@@ -166,7 +166,7 @@ class TestCoreOperationsLevel2(TestCase):
         """
         tol = self.tol
         for num_qubits in self._num_qubits_range():
-            workspace = np.zeros(4**num_qubits, dtype=np.cfloat)
+            workspace = np.zeros(4**num_qubits, dtype=np.complex128)
             for ctrl, targ in self._all_controls_and_targets(num_qubits):
                 mat = tut.rand_rect_mat(2**num_qubits, np.random.randint(1, 2**num_qubits))
                 angle = 2 * np.pi * np.random.rand()
@@ -188,7 +188,7 @@ class TestCoreOperationsLevel2(TestCase):
         """
         tol = self.tol
         for num_qubits in self._num_qubits_range():
-            workspace = np.zeros(4**num_qubits, dtype=np.cfloat)
+            workspace = np.zeros(4**num_qubits, dtype=np.complex128)
             for qubit_no in range(num_qubits):
                 w_mat = tut.rand_rect_mat(2**num_qubits, np.random.randint(1, 2**num_qubits))
                 z_mat = tut.rand_rect_mat(w_mat.shape[0], w_mat.shape[1])
@@ -208,7 +208,7 @@ class TestCoreOperationsLevel2(TestCase):
         """
         tol = self.tol
         for num_qubits in self._num_qubits_range():
-            workspace = np.zeros(4**num_qubits, dtype=np.cfloat)
+            workspace = np.zeros(4**num_qubits, dtype=np.complex128)
             for entangler in ["cx", "cz", "cp"]:
                 for ctrl, targ in self._all_controls_and_targets(num_qubits):
                     mat = tut.rand_rect_mat(2**num_qubits, np.random.randint(1, 2**num_qubits))
@@ -249,7 +249,7 @@ class TestCoreOperationsLevel2(TestCase):
         """
         tol = self.tol
         for num_qubits in self._num_qubits_range():
-            workspace = np.zeros(4**num_qubits, dtype=np.cfloat)
+            workspace = np.zeros(4**num_qubits, dtype=np.complex128)
             for entangler in ["cx", "cz", "cp"]:
                 mat = tut.rand_rect_mat(2**num_qubits, np.random.randint(1, 2**num_qubits))
 
@@ -281,7 +281,7 @@ class TestCoreOperationsLevel2(TestCase):
         """
         tol = self.tol
         for num_qubits in self._num_qubits_range():
-            workspace = np.zeros(4**num_qubits, dtype=np.cfloat)
+            workspace = np.zeros(4**num_qubits, dtype=np.complex128)
             for entangler in ["cx", "cz", "cp"]:
                 # Generate a random circuit and theta parameters.
                 circ = ParametricCircuit(
@@ -296,7 +296,7 @@ class TestCoreOperationsLevel2(TestCase):
                 nmat = ctr.ansatz_to_numpy_trotter(circ, thetas)
                 fmat = ctr.ansatz_to_numpy_fast(circ, thetas)
                 vmat = cop.v_mul_mat(
-                    circ, thetas, np.eye(2**num_qubits, dtype=np.cfloat), workspace
+                    circ, thetas, np.eye(2**num_qubits, dtype=np.complex128), workspace
                 )
 
                 # Compare all matrices for equality.
@@ -311,7 +311,7 @@ class TestCoreOperationsLevel2(TestCase):
         """
         tol = self.tol
         for num_qubits in self._num_qubits_range():
-            workspace = np.zeros(4**num_qubits, dtype=np.cfloat)
+            workspace = np.zeros(4**num_qubits, dtype=np.complex128)
             for entangler in ["cx", "cz", "cp"]:
                 print(".", end="", flush=True)  # print progress
                 x_mat = tut.rand_rect_mat(2**num_qubits, np.random.randint(1, 2**num_qubits))

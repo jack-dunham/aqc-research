@@ -59,7 +59,7 @@ class _Objective(gradtest.BaseGradTestObjective):
 
         # Create left-hand side vector as MPS and normal states.
         qcirc = QuantumCircuit(circ.num_qubits)
-        self.lvec_state = np.zeros(circ.dimension, dtype=np.cfloat)
+        self.lvec_state = np.zeros(circ.dimension, dtype=np.complex128)
         self.lvec_mps = mpsop.mps_from_circuit(
             qcirc, trunc_thr=self.trunc_thr, out_state=self.lvec_state
         )
@@ -70,16 +70,16 @@ class _Objective(gradtest.BaseGradTestObjective):
         if close_states:
             target_thetas = thetas + 0.1 * target_thetas
         qcirc = ansatz_to_qcircuit(circ, target_thetas)
-        self.target_state = np.zeros(circ.dimension, dtype=np.cfloat)
+        self.target_state = np.zeros(circ.dimension, dtype=np.complex128)
         self.target_mps = mpsop.mps_from_circuit(
             qcirc, trunc_thr=self.trunc_thr, out_state=self.target_state
         )
 
-    def objective_from_matrix(self, thetas: np.ndarray) -> np.cfloat:
+    def objective_from_matrix(self, thetas: np.ndarray) -> np.complex128:
         v_mat = qcircuit_to_matrix(ansatz_to_qcircuit(self.circ, thetas))
-        return np.cfloat(np.vdot(v_mat @ self.lvec_state, self.target_state))
+        return np.complex128(np.vdot(v_mat @ self.lvec_state, self.target_state))
 
-    def objective(self, thetas: np.ndarray) -> np.cfloat:
+    def objective(self, thetas: np.ndarray) -> np.complex128:
         vh_phi = mpsop.v_dagger_mul_mps(
             self.circ,
             thetas,

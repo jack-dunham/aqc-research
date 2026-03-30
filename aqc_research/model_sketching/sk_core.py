@@ -141,7 +141,7 @@ class SketchingObjectiveEx:
         self._target = skvecs.target_matrix
         self._skvecs = skvecs
         self._enable_stats = enable_stats
-        self._workspace = np.zeros((dim, num_skvecs), dtype=np.cfloat)
+        self._workspace = np.zeros((dim, num_skvecs), dtype=np.complex128)
         self._grad_scaler = grad_scaler
         self._stop_timeout = stop_timeout
         self._stop_stagnant = stop_stagnant
@@ -312,7 +312,7 @@ class FullRangeSketchingVectors(SketchingVectorsBase):
         """
         super().__init__(target_mat.shape[0], target_mat)
         dim = self.target_matrix.shape[0]
-        self._x_vecs = np.zeros((dim, self.num_skvecs), dtype=np.cfloat)
+        self._x_vecs = np.zeros((dim, self.num_skvecs), dtype=np.complex128)
         self._y_vecs = np.zeros_like(self._x_vecs)
 
     def generate(
@@ -341,7 +341,7 @@ class RandomSketchingVectors(SketchingVectorsBase):
         super().__init__(num_skvecs, target_mat)
         dim = self.target_matrix.shape[0]
         assert dim % self.num_skvecs == 0
-        self._storage = np.zeros((dim, self.num_skvecs), dtype=np.cfloat)
+        self._storage = np.zeros((dim, self.num_skvecs), dtype=np.complex128)
 
     def generate(
         self,
@@ -374,8 +374,8 @@ class AlternatingSketchingVectors(SketchingVectorsBase):
         assert dim % self.num_skvecs == 0
         self._offset = int(0)
         self._indices = np.random.permutation(dim)
-        self._x_vecs = np.zeros((dim, self.num_skvecs), dtype=np.cfloat)
-        self._y_vecs = np.zeros((dim, self.num_skvecs), dtype=np.cfloat)
+        self._x_vecs = np.zeros((dim, self.num_skvecs), dtype=np.complex128)
+        self._y_vecs = np.zeros((dim, self.num_skvecs), dtype=np.complex128)
 
     def generate(
         self,
@@ -424,7 +424,7 @@ class EigenSketchingVectors(SketchingVectorsBase):
         """
         super().__init__(num_skvecs, target_mat)
         dim = target_mat.shape[0]
-        self._workspace = np.zeros((3, dim, num_skvecs), dtype=np.cfloat)
+        self._workspace = np.zeros((3, dim, num_skvecs), dtype=np.complex128)
 
     def generate(
         self,

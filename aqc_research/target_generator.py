@@ -111,7 +111,7 @@ def target_state_from_circuit(circ: ParametricCircuit, thetas: np.ndarray) -> np
     """
     ini_state = utl.zero_state(circ.num_qubits)  # |0>
     target = np.zeros_like(ini_state)
-    workspace = np.zeros((2, circ.dimension), dtype=np.cfloat)
+    workspace = np.zeros((2, circ.dimension), dtype=np.complex128)
     cop.v_mul_vec(circ=circ, thetas=thetas, vec=ini_state, out=target, workspace=workspace)
 
     # Should be normalized.
@@ -198,7 +198,7 @@ def make_target_matrix(target_name: str, num_qubits: int) -> np.ndarray:
                 [[1, 0], [0, -1]],
             ],
         )
-        target = np.zeros((dim, dim), np.cfloat)
+        target = np.zeros((dim, dim), np.complex128)
         for _ in range(nps):
             pstr = 1
             for __ in range(num_qubits):
@@ -209,7 +209,7 @@ def make_target_matrix(target_name: str, num_qubits: int) -> np.ndarray:
 
     elif target_name == "mcx":
         _logger.info("%s a single multi-control CNOT gate", msg)
-        target = np.eye(dim, dtype=np.cfloat)
+        target = np.eye(dim, dtype=np.complex128)
         half, last = dim // 2 - 1, dim - 1
         target[half, half], target[half, last] = 0, 1
         target[last, half], target[last, last] = 1, 0
@@ -230,14 +230,14 @@ def make_target_matrix(target_name: str, num_qubits: int) -> np.ndarray:
             "%s a unit matrix with diagonal cyclically shifted one position to the right",
             msg,
         )
-        target = np.roll(np.eye(dim, dtype=np.cfloat), 1, axis=1)
+        target = np.roll(np.eye(dim, dtype=np.complex128), 1, axis=1)
 
     elif target_name == "shift2":
         _logger.info(
             "%s a unit matrix with diagonal cyclically shifted two positions to the right",
             msg,
         )
-        target = np.roll(np.eye(dim, dtype=np.cfloat), 2, axis=1)
+        target = np.roll(np.eye(dim, dtype=np.complex128), 2, axis=1)
 
     elif target_name == "shift_half":
         _logger.info(
@@ -245,11 +245,11 @@ def make_target_matrix(target_name: str, num_qubits: int) -> np.ndarray:
             "shifted dim/2 positions to the right (half of matrix size)",
             msg,
         )
-        target = np.roll(np.eye(dim, dtype=np.cfloat), dim // 2, axis=1)
+        target = np.roll(np.eye(dim, dtype=np.complex128), dim // 2, axis=1)
 
     elif target_name == "random_perm":
         _logger.info("%s a randomly permuted identity matrix", msg)
-        target = np.take(np.eye(dim, dtype=np.cfloat), np.random.permutation(dim), axis=1)
+        target = np.take(np.eye(dim, dtype=np.complex128), np.random.permutation(dim), axis=1)
 
     else:
         raise ValueError(

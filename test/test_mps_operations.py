@@ -68,7 +68,7 @@ class TestMPS(TestCase):
         tol = (2 ** max(num_qubits - 10, 0)) * self._tol
 
         # Generates a random state in MPS format.
-        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2**num_qubits, dtype=np.complex128)
         mps = mpsop.rand_mps_vec(num_qubits, out_state=state1)
         self.assertTrue(mpsop.check_mps(mps))
 
@@ -89,8 +89,8 @@ class TestMPS(TestCase):
         """Job function for the test_mps_dot()."""
         num_qubits = int(conf["num_qubits"])
         tol = (2 ** max(num_qubits - 10, 0)) * self._tol
-        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
-        state2 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2**num_qubits, dtype=np.complex128)
+        state2 = np.zeros(2**num_qubits, dtype=np.complex128)
 
         mps1 = mpsop.rand_mps_vec(num_qubits, out_state=state1)
         mps2 = mpsop.rand_mps_vec(num_qubits, out_state=state2)
@@ -101,9 +101,9 @@ class TestMPS(TestCase):
         dot22 = mpsop.mps_dot(mps2, mps2)
         clock = float(perf_counter() - tic) / 3
 
-        err11 = abs(dot11 - np.cfloat(np.vdot(state1, state1)))
-        err12 = abs(dot12 - np.cfloat(np.vdot(state1, state2)))
-        err22 = abs(dot22 - np.cfloat(np.vdot(state2, state2)))
+        err11 = abs(dot11 - np.complex128(np.vdot(state1, state1)))
+        err12 = abs(dot12 - np.complex128(np.vdot(state1, state2)))
+        err22 = abs(dot22 - np.complex128(np.vdot(state2, state2)))
 
         err11 = max(abs(dot11 - 1), err11)
         err22 = max(abs(dot22 - 1), err22)
@@ -137,7 +137,7 @@ class TestMPS(TestCase):
 
         # state1 <-- MPS(qc1) * MPS(qc0).
         mps0 = mpsop.mps_from_circuit(qcirc[0].copy())  # copy!
-        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2**num_qubits, dtype=np.complex128)
         tic = perf_counter()
         mpsop.qcircuit_mul_mps(qcirc[1].copy(), mps0, out_state=state1)  # copy!
         clock = perf_counter() - tic
@@ -167,7 +167,7 @@ class TestMPS(TestCase):
         blocks = tut.rand_circuit(num_qubits, np.random.randint(20, 50))
         circ = ParametricCircuit(num_qubits, entangler, blocks)
         thetas = helper.rand_thetas(circ.num_thetas)
-        vec = np.zeros(2**num_qubits, dtype=np.cfloat)
+        vec = np.zeros(2**num_qubits, dtype=np.complex128)
         mps_vec = mpsop.rand_mps_vec(num_qubits, out_state=vec)
 
         # vec2 = V @ V.H @ vec == vec.
@@ -224,7 +224,7 @@ class TestRDMFromMPS:
     def test_given_random_state_when_partial_trace_on_random_subset_then_mps_method_matches_qiskit(
         self, num_qubits
     ):
-        state1 = np.zeros(2**num_qubits, dtype=np.cfloat)
+        state1 = np.zeros(2**num_qubits, dtype=np.complex128)
         mps1 = mpsop.rand_mps_vec(num_qubits, out_state=state1)
         qubits_to_keep = np.random.choice(
             range(num_qubits), size=np.random.randint(1, num_qubits), replace=False
@@ -277,7 +277,7 @@ class TestExpectationFromMPS:
     @pytest.mark.parametrize("op", ["Z", "X", "Y"])
     def test_given_random_mps_when_pauli_expectation_then_matches_analytic(self, op):
         n = 4
-        state = np.zeros(2**n, dtype=np.cfloat)
+        state = np.zeros(2**n, dtype=np.complex128)
         mps = mpsop.rand_mps_vec(n, out_state=state)
         mps_qubit_evals = [mpsop.mps_expectation(mps, op, i) for i in range(n)]
 

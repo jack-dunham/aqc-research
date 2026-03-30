@@ -25,11 +25,11 @@ import aqc_research.checking as chk
 # _glo_th_complex_t = th.complex64 if _glo_th_real_t == th.float32 else th.complex128
 
 # Identity gate acting on a single qubit:
-_glo_eye2x2 = np.array([[1, 0], [0, 1]], dtype=np.cfloat)
+_glo_eye2x2 = np.array([[1, 0], [0, 1]], dtype=np.complex128)
 
 # Projectors |0><0| and |1><1| respectively:
-_glo_np00 = np.array([[1, 0], [0, 0]], dtype=np.cfloat)
-_glo_np11 = np.array([[0, 0], [0, 1]], dtype=np.cfloat)
+_glo_np00 = np.array([[1, 0], [0, 0]], dtype=np.complex128)
+_glo_np11 = np.array([[0, 0], [0, 1]], dtype=np.complex128)
 # _glo_th00 = th.tensor([[1, 0], [0, 0]], dtype=_glo_th_complex_t)
 # _glo_th11 = th.tensor([[0, 0], [0, 1]], dtype=_glo_th_complex_t)
 
@@ -65,16 +65,16 @@ def np_block_matrix(
     t_g = t_mat @ gate_mat
 
     if c < t:
-        eye1 = np.eye(2**c, dtype=np.cfloat)
-        eye2 = np.eye(2 ** (t - c - 1), dtype=np.cfloat)
-        eye3 = np.eye(2 ** (n - 1 - t), dtype=np.cfloat)
+        eye1 = np.eye(2**c, dtype=np.complex128)
+        eye2 = np.eye(2 ** (t - c - 1), dtype=np.complex128)
+        eye3 = np.eye(2 ** (n - 1 - t), dtype=np.complex128)
 
         mat1 = np.kron(np.kron(np.kron(np.kron(eye1, c00), eye2), t_mat), eye3)
         mat2 = np.kron(np.kron(np.kron(np.kron(eye1, c11), eye2), t_g), eye3)
     else:
-        eye1 = np.eye(2**t, dtype=np.cfloat)
-        eye2 = np.eye(2 ** (c - t - 1), dtype=np.cfloat)
-        eye3 = np.eye(2 ** (n - 1 - c), dtype=np.cfloat)
+        eye1 = np.eye(2**t, dtype=np.complex128)
+        eye2 = np.eye(2 ** (c - t - 1), dtype=np.complex128)
+        eye3 = np.eye(2 ** (n - 1 - c), dtype=np.complex128)
 
         mat1 = np.kron(np.kron(np.kron(np.kron(eye1, t_mat), eye2), c00), eye3)
         mat2 = np.kron(np.kron(np.kron(np.kron(eye1, t_g), eye2), c11), eye3)
@@ -104,16 +104,16 @@ def np_cx_matrix(n: int, c: int, t: int) -> np.ndarray:
     iden1q = _glo_eye2x2  # identity matrix acting on one qubit
 
     if c < t:
-        eye1 = np.eye(2**c, dtype=np.cfloat)
-        eye2 = np.eye(2 ** (t - c - 1), dtype=np.cfloat)
-        eye3 = np.eye(2 ** (n - 1 - t), dtype=np.cfloat)
+        eye1 = np.eye(2**c, dtype=np.complex128)
+        eye2 = np.eye(2 ** (t - c - 1), dtype=np.complex128)
+        eye3 = np.eye(2 ** (n - 1 - t), dtype=np.complex128)
 
         mat1 = np.kron(np.kron(np.kron(np.kron(eye1, _glo_np00), eye2), iden1q), eye3)
         mat2 = np.kron(np.kron(np.kron(np.kron(eye1, _glo_np11), eye2), np_x()), eye3)
     else:
-        eye1 = np.eye(2**t, dtype=np.cfloat)
-        eye2 = np.eye(2 ** (c - t - 1), dtype=np.cfloat)
-        eye3 = np.eye(2 ** (n - 1 - c), dtype=np.cfloat)
+        eye1 = np.eye(2**t, dtype=np.complex128)
+        eye2 = np.eye(2 ** (c - t - 1), dtype=np.complex128)
+        eye3 = np.eye(2 ** (n - 1 - c), dtype=np.complex128)
 
         mat1 = np.kron(np.kron(np.kron(np.kron(eye1, iden1q), eye2), _glo_np00), eye3)
         mat2 = np.kron(np.kron(np.kron(np.kron(eye1, np_x()), eye2), _glo_np11), eye3)
@@ -132,7 +132,7 @@ def np_rx(phi: float) -> np.ndarray:
     Returns:
         an RX rotation matrix.
     """
-    out = np.zeros((2, 2), dtype=np.cfloat)
+    out = np.zeros((2, 2), dtype=np.complex128)
     a = 0.5 * phi
     cs, sn = cmath.cos(a), -1j * cmath.sin(a)
     out[0, 0] = cs
@@ -177,7 +177,7 @@ def np_ry(phi: float) -> np.ndarray:
     Returns:
         an RY rotation matrix.
     """
-    out = np.zeros((2, 2), dtype=np.cfloat)
+    out = np.zeros((2, 2), dtype=np.complex128)
     a = 0.5 * phi
     cs, sn = cmath.cos(a), cmath.sin(a)
     out[0, 0] = cs
@@ -222,7 +222,7 @@ def np_rz(phi: float) -> np.ndarray:
     Returns:
         an RZ rotation matrix.
     """
-    out = np.zeros((2, 2), dtype=np.cfloat)
+    out = np.zeros((2, 2), dtype=np.complex128)
     exp = cmath.exp(0.5j * phi)
     out[0, 0] = 1.0 / exp
     out[1, 1] = exp
@@ -263,7 +263,7 @@ def np_phase(phi: float) -> np.ndarray:
     Returns:
         phase gate matrix.
     """
-    out = np.eye(2, dtype=np.cfloat)
+    out = np.eye(2, dtype=np.complex128)
     out[1, 1] = cmath.exp(1j * phi)
     return out
 
@@ -275,7 +275,7 @@ def np_x() -> np.ndarray:
     Returns:
         phase gate matrix.
     """
-    out = np.zeros((2, 2), dtype=np.cfloat)
+    out = np.zeros((2, 2), dtype=np.complex128)
     out[0, 1] = 1
     out[1, 0] = 1
     return out
@@ -288,6 +288,6 @@ def np_z() -> np.ndarray:
     Returns:
         phase gate matrix.
     """
-    out = np.eye(2, dtype=np.cfloat)
+    out = np.eye(2, dtype=np.complex128)
     out[1, 1] = -1
     return out

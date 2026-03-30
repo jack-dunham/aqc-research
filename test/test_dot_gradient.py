@@ -52,7 +52,7 @@ class _Objective(gradtest.BaseGradTestObjective):
         assert isinstance(close_states, bool)
 
         self.circ = circ
-        self.workspace = np.zeros((3, circ.dimension), dtype=np.cfloat)
+        self.workspace = np.zeros((3, circ.dimension), dtype=np.complex128)
         if close_states:  # x and y vectors are close to each other
             self.x_vec = tut.rand_vec(circ.dimension, True)
             self.y_vec = self.x_vec + 0.1 * tut.rand_vec(circ.dimension, True)
@@ -60,12 +60,12 @@ class _Objective(gradtest.BaseGradTestObjective):
             self.x_vec = tut.rand_vec(circ.dimension, True)
             self.y_vec = tut.rand_vec(circ.dimension, True)
 
-    def objective_from_matrix(self, thetas: np.ndarray) -> np.cfloat:
+    def objective_from_matrix(self, thetas: np.ndarray) -> np.complex128:
         v_mat = ctr.qcircuit_to_matrix(ctr.ansatz_to_qcircuit(self.circ, thetas))
-        return np.cfloat(np.vdot(v_mat @ self.x_vec, self.y_vec))
+        return np.complex128(np.vdot(v_mat @ self.x_vec, self.y_vec))
 
-    def objective(self, thetas: np.ndarray) -> np.cfloat:
-        vh_y = np.zeros(self.circ.dimension, dtype=np.cfloat)
+    def objective(self, thetas: np.ndarray) -> np.complex128:
+        vh_y = np.zeros(self.circ.dimension, dtype=np.complex128)
         vh_y = cop.v_dagger_mul_vec(
             circ=self.circ,
             thetas=thetas,
@@ -73,7 +73,7 @@ class _Objective(gradtest.BaseGradTestObjective):
             out=vh_y,
             workspace=self.workspace[0:2],
         )
-        return np.cfloat(np.vdot(self.x_vec, vh_y))
+        return np.complex128(np.vdot(self.x_vec, vh_y))
 
     def gradient(
         self,
@@ -81,7 +81,7 @@ class _Objective(gradtest.BaseGradTestObjective):
         block_range: Optional[Tuple[int, int]] = None,
         front_layer: Optional[bool] = True,
     ) -> np.ndarray:
-        vh_y = np.zeros(self.circ.dimension, dtype=np.cfloat)
+        vh_y = np.zeros(self.circ.dimension, dtype=np.complex128)
         vh_y = cop.v_dagger_mul_vec(
             circ=self.circ,
             thetas=thetas,

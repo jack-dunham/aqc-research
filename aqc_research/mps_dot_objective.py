@@ -107,7 +107,7 @@ def fast_dot_gradient(
         last_half_layer_num_blocks = circ.half_layer_num_blocks
 
     # Convenient split into parameter sub-sets for 1- and 2-qubit gates.
-    grad = np.zeros(circ.num_thetas, dtype=np.cfloat)
+    grad = np.zeros(circ.num_thetas, dtype=np.complex128)
     thetas1q, grad1q = circ.subset1q(thetas), circ.subset1q(grad)
     thetas2q, grad2q = circ.subset2q(thetas), circ.subset2q(grad)
 
@@ -193,7 +193,7 @@ def fast_dot_gradient(
 
                 cp_w_z = mps_dot(w_vec, z_vec)  # <(cp(a) @ w)|z>
                 cp_w_z2 = mps_dot(w_vec2, z_vec)  # <(cp(a+pi) @ w)|z>
-                grad2q[i_mod_nb, 4] += np.cfloat(-0.5j * (cp_w_z - cp_w_z2))
+                grad2q[i_mod_nb, 4] += np.complex128(-0.5j * (cp_w_z - cp_w_z2))
             else:
                 z_vec = entangler_mul_mps(0.0, ctrl, targ, z_vec)  # z = E @ z
                 w_vec = entangler_mul_mps(0.0, ctrl, targ, w_vec)  # w = E @ w
@@ -468,7 +468,7 @@ def cz_mul_mps(
     return mps_from_circuit(qc, trunc_thr=trunc_thr)
 
 
-def dot_x(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.cfloat:
+def dot_x(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.complex128:
     """
     Computes 0.5j * <X@w|z>. Note, there is no truncation threshold among function
     arguments because multiplication by 1-qubit gate does not change bond dimension.
@@ -481,10 +481,10 @@ def dot_x(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.cfloat:
     Returns:
         0.5j * <X@w|z>.
     """
-    return np.cfloat(0.5j * mps_dot(x_mul_mps(qubit, w_vec), z_vec))
+    return np.complex128(0.5j * mps_dot(x_mul_mps(qubit, w_vec), z_vec))
 
 
-def dot_y(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.cfloat:
+def dot_y(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.complex128:
     """
     Computes 0.5j * <Y@w|z>. Note, there is no truncation threshold among function
     arguments because multiplication by 1-qubit gate does not change bond dimension.
@@ -497,10 +497,10 @@ def dot_y(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.cfloat:
     Returns:
         0.5j * <Y@w|z>.
     """
-    return np.cfloat(0.5j * mps_dot(y_mul_mps(qubit, w_vec), z_vec))
+    return np.complex128(0.5j * mps_dot(y_mul_mps(qubit, w_vec), z_vec))
 
 
-def dot_z(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.cfloat:
+def dot_z(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.complex128:
     """
     Computes 0.5j * <Z@w|z>. Note, there is no truncation threshold among function
     arguments because multiplication by 1-qubit gate does not change bond dimension.
@@ -513,4 +513,4 @@ def dot_z(qubit: int, w_vec: QiskitMPS, z_vec: QiskitMPS) -> np.cfloat:
     Returns:
         0.5j * <Z@w|z>.
     """
-    return np.cfloat(0.5j * mps_dot(z_mul_mps(qubit, w_vec), z_vec))
+    return np.complex128(0.5j * mps_dot(z_mul_mps(qubit, w_vec), z_vec))

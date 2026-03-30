@@ -167,9 +167,9 @@ class TestCoreOperation(TestCase):
                     if case_no == 0:
                         gate2x2.fill(0)
                     elif case_no == 1:
-                        gate2x2 = np.asarray([[1, 0], [0, 0]], dtype=np.cfloat)
+                        gate2x2 = np.asarray([[1, 0], [0, 0]], dtype=np.complex128)
                     elif case_no == 2:
-                        gate2x2 = np.asarray([[0, 0], [0, 1]], dtype=np.cfloat)
+                        gate2x2 = np.asarray([[0, 0], [0, 1]], dtype=np.complex128)
                     elif case_no == 3:
                         gate2x2[0, :] = 0
                     elif case_no == 4:
@@ -206,7 +206,7 @@ class TestCoreOperation(TestCase):
         tol = self.tol
         for num_qubits in range(2, self.max_num_qubits + 1):
             dim = 2**num_qubits
-            workspace = np.zeros((2, dim), dtype=np.cfloat)
+            workspace = np.zeros((2, dim), dtype=np.complex128)
 
             for ctrl in range(num_qubits):  # for all control qubits ...
                 for targ in range(num_qubits):  # for all target qubits ...
@@ -259,7 +259,7 @@ class TestCoreOperation(TestCase):
         tol = self.tol
         for num_qubits in range(2, self.max_num_qubits + 1):
             dim = 2**num_qubits
-            workspace = np.zeros((2, dim), dtype=np.cfloat)
+            workspace = np.zeros((2, dim), dtype=np.complex128)
 
             for second_order in [False, True]:
                 for entangler in ["cx", "cz", "cp"]:
@@ -289,7 +289,7 @@ class TestCoreOperation(TestCase):
         tol = self.tol
         for num_qubits in range(2, self.max_num_qubits + 1):
             dim = 2**num_qubits
-            workspace = np.zeros((2, dim), dtype=np.cfloat)
+            workspace = np.zeros((2, dim), dtype=np.complex128)
 
             for second_order in [False, True]:
                 for entangler in ["cx", "cx", "cz", "cp"]:  # repeat "cx" for Trotter
@@ -312,7 +312,7 @@ class TestCoreOperation(TestCase):
                         # Create the circuit matrix by multiplying by every column
                         # (here, row which is the same as column) of the identity
                         # one, i.e. V @ vector_row[i], for all i.
-                        vmat = np.eye(dim, dtype=np.cfloat)
+                        vmat = np.eye(dim, dtype=np.complex128)
                         for i in range(dim):
                             cop.v_mul_vec(circ, thetas, vmat[i], vmat[i], workspace)
                         vmat = vmat.T  # because we used rows instead of columns

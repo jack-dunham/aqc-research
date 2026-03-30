@@ -189,7 +189,7 @@ def mps_to_vector(
         mps = _preprocess_mps(qiskit_mps)
 
     num_qubits = len(mps)
-    state = np.zeros(2**num_qubits, dtype=np.cfloat)
+    state = np.zeros(2**num_qubits, dtype=np.complex128)
     for k in range(state.size):  # for all combinations of individual bits ...
         coef = None
         for n in range(num_qubits):
@@ -242,7 +242,7 @@ def extract_amplitude(
 
 def mps_dot(
     qiskit_mps1: QiskitMPS, qiskit_mps2: QiskitMPS, already_preprocessed: Optional[bool] = False
-) -> np.cfloat:
+) -> np.complex128:
     """
     Computes dot product between MPS decompositions of two quantum states:
     ``< mps1 | mps2 >``.
@@ -268,7 +268,7 @@ def mps_dot(
         a_b = np.tensordot(a_b, np.conj(mat1[n]), axes=([0], [1]))
         a_b = np.tensordot(a_b, mat2[n], axes=([0, 1], [1, 0]))
 
-    return np.cfloat(a_b.item())
+    return np.complex128(a_b.item())
 
 
 def mps_expectation(

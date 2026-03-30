@@ -86,7 +86,7 @@ def zero_state(num_qubits: int) -> np.ndarray:
     Generates the quantum state |0>.
     """
     assert chk.is_int(num_qubits, num_qubits >= 2)
-    state = np.zeros(2**num_qubits, dtype=np.cfloat)
+    state = np.zeros(2**num_qubits, dtype=np.complex128)
     state[0] = 1
     return state
 

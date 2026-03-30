@@ -506,7 +506,7 @@ def v_mul_mat(
     assert mat.data.contiguous  # !!!
 
     blocks = circ.blocks
-    mat2 = np.zeros((2, 2, 2), dtype=np.cfloat)  # temporary 2x2 matrices
+    mat2 = np.zeros((2, 2, 2), dtype=np.complex128)  # temporary 2x2 matrices
 
     # Convenient split into parameter sub-sets for 1- and 2-qubit gates.
     thetas1q = circ.subset1q(thetas)
@@ -588,7 +588,7 @@ def v_dagger_mul_mat(
     assert mat.data.contiguous  # !!!
 
     blocks = circ.blocks
-    mat2 = np.zeros((2, 2, 2), dtype=np.cfloat)  # temporary 2x2 matrices
+    mat2 = np.zeros((2, 2, 2), dtype=np.complex128)  # temporary 2x2 matrices
 
     # Convenient split into parameter sub-sets for 1- and 2-qubit gates.
     thetas1q = circ.subset1q(thetas)
@@ -692,7 +692,7 @@ def grad_of_matrix_dot_product(
     z_mat = vh_y_mat  # matrix z, initially z = V.H @ y
 
     # Convenient split into parameter sub-sets for 1- and 2-qubit gates.
-    grad = np.zeros(circ.num_thetas, dtype=np.cfloat)
+    grad = np.zeros(circ.num_thetas, dtype=np.complex128)
     thetas1q, grad1q = circ.subset1q(thetas), circ.subset1q(grad)
     thetas2q, grad2q = circ.subset2q(thetas), circ.subset2q(grad)
 
@@ -832,7 +832,7 @@ def coord_descent_single_sweep(
     learn_rate = np.pi / 16
     max_delta_theta = np.pi / 4
 
-    def _delta_theta(prod_: np.cfloat, grad_: np.cfloat) -> float:
+    def _delta_theta(prod_: np.complex128, grad_: np.complex128) -> float:
         """
         Computes theta increment from the product <V,U> and its gradient.
         f_obj = 1 - |<V,U>|^2 / dim^2

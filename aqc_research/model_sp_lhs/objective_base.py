@@ -72,7 +72,7 @@ class ThinStateHandler:
         self._max_flips = max_flips
 
         # Placeholder for a (temporary) flip-state or |0>:
-        self._state = np.zeros(dim, dtype=np.cfloat)
+        self._state = np.zeros(dim, dtype=np.complex128)
 
         # Indices of (a single) non-zero entry in every state:
         self._state_idx = np.zeros(num_states, dtype=np.int64)
@@ -163,7 +163,7 @@ class ThinStateHandler:
         self._state[self._state_idx] = coefs
         return self._state
 
-    def state_dot_vector(self, state_no: int, vec: np.ndarray) -> np.cfloat:
+    def state_dot_vector(self, state_no: int, vec: np.ndarray) -> np.complex128:
         """
         Computes <state|vector>, where state is a vector of all zeros except
         one unit element. Because state has a single non-zero element, we just
@@ -174,7 +174,7 @@ class ThinStateHandler:
 
         return vec[self._state_idx[state_no]]
 
-    def composite_state_dot_vector_no_zero(self, coefs: np.ndarray, vec: np.ndarray) -> np.cfloat:
+    def composite_state_dot_vector_no_zero(self, coefs: np.ndarray, vec: np.ndarray) -> np.complex128:
         """
         Computes ``<composite state|vector>``, where "composite state" is a vector
         of linear combination of *flip-states*. Composite state is very sparse,
@@ -194,9 +194,9 @@ class ThinStateHandler:
         assert abs(np.linalg.norm(coefs) - 1) < np.sqrt(np.finfo(np.float64).eps)
         assert chk.complex_1d(vec, vec.size == 2**self._num_qubits)
 
-        return np.cfloat(np.vdot(coefs, vec[self._state_idx[1:]]))
+        return np.complex128(np.vdot(coefs, vec[self._state_idx[1:]]))
 
-    def composite_state_dot_vector(self, coefs: np.ndarray, vec: np.ndarray) -> np.cfloat:
+    def composite_state_dot_vector(self, coefs: np.ndarray, vec: np.ndarray) -> np.complex128:
         """
         Computes ``<composite state|vector>``, where "composite state" is
         a vector of linear combination of *all* states. Composite state is very
@@ -215,7 +215,7 @@ class ThinStateHandler:
         assert abs(np.linalg.norm(coefs) - 1) < np.sqrt(np.finfo(np.float64).eps)
         assert chk.complex_1d(vec, vec.size == 2**self._num_qubits)
 
-        return np.cfloat(np.vdot(coefs, vec[self._state_idx]))
+        return np.complex128(np.vdot(coefs, vec[self._state_idx]))
 
     @property
     def num_states(self) -> int:
@@ -295,7 +295,7 @@ class GenericStateHandler:
             raise ValueError("expects 'max_flips <= 1' to save memory")
 
         num_states = num_qubits + 1
-        self._states = np.zeros((num_states, 2**num_qubits), dtype=np.cfloat)
+        self._states = np.zeros((num_states, 2**num_qubits), dtype=np.complex128)
         for i in range(num_states):
             qc = QuantumCircuit(num_qubits)
             if i > 0:
@@ -312,10 +312,10 @@ class GenericStateHandler:
         assert chk.is_int(state_no, 0 <= state_no < self.num_states)
         return self._states[state_no]
 
-    def state_dot_vector(self, state_no: int, vec: np.ndarray) -> np.cfloat:
+    def state_dot_vector(self, state_no: int, vec: np.ndarray) -> np.complex128:
         """Computes <state|vector>."""
         assert chk.is_int(state_no, 0 <= state_no < self.num_states)
-        return np.cfloat(np.vdot(self._states[state_no], vec))
+        return np.complex128(np.vdot(self._states[state_no], vec))
 
     @property
     def state0(self) -> np.ndarray:
@@ -335,11 +335,11 @@ class GenericStateHandler:
         """Interface stub function. Not implemented."""
         raise NotImplementedError()
 
-    def composite_state_dot_vector_no_zero(self, _: np.ndarray, __: np.ndarray) -> np.cfloat:
+    def composite_state_dot_vector_no_zero(self, _: np.ndarray, __: np.ndarray) -> np.complex128:
         """Interface stub function. Not implemented."""
         raise NotImplementedError()
 
-    def composite_state_dot_vector(self, _: np.ndarray, __: np.ndarray) -> np.cfloat:
+    def composite_state_dot_vector(self, _: np.ndarray, __: np.ndarray) -> np.complex128:
         """Interface stub function. Not implemented."""
         raise NotImplementedError()
 
@@ -399,10 +399,10 @@ class MpsStateHandler:
         assert chk.is_int(state_no, 0 <= state_no < self.num_states)
         return self._states[state_no]
 
-    def state_dot_vector(self, state_no: int, vec: QiskitMPS) -> np.cfloat:
+    def state_dot_vector(self, state_no: int, vec: QiskitMPS) -> np.complex128:
         """Computes <state|vector>."""
         assert chk.is_int(state_no, 0 <= state_no < self.num_states)
-        return np.cfloat(mps_dot(self._states[state_no], vec))
+        return np.complex128(mps_dot(self._states[state_no], vec))
 
     @property
     def state0(self) -> QiskitMPS:
@@ -422,11 +422,11 @@ class MpsStateHandler:
         """Interface stub function. Not implemented."""
         raise NotImplementedError()
 
-    def composite_state_dot_vector_no_zero(self, _: np.ndarray, __: np.ndarray) -> np.cfloat:
+    def composite_state_dot_vector_no_zero(self, _: np.ndarray, __: np.ndarray) -> np.complex128:
         """Interface stub function. Not implemented."""
         raise NotImplementedError()
 
-    def composite_state_dot_vector(self, _: np.ndarray, __: np.ndarray) -> np.cfloat:
+    def composite_state_dot_vector(self, _: np.ndarray, __: np.ndarray) -> np.complex128:
         """Interface stub function. Not implemented."""
         raise NotImplementedError()
 
@@ -674,8 +674,8 @@ class SpLHSObjectiveBase(ABC):
         self._vh_target: Union[np.ndarray, QiskitMPS, None] = None
         self._workspace: Union[np.ndarray, None] = None
         if not use_mps:
-            self._vh_target = np.zeros(circuit.dimension, dtype=np.cfloat)
-            self._workspace = np.zeros((3, circuit.dimension), dtype=np.cfloat)
+            self._vh_target = np.zeros(circuit.dimension, dtype=np.complex128)
+            self._workspace = np.zeros((3, circuit.dimension), dtype=np.complex128)
 
         # State handler:
         num_qubits = user_parameters["num_qubits"]

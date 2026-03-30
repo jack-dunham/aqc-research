@@ -122,7 +122,7 @@ def get_solution_from_optim_result(
         else:
             state = helper.zero_state(num_qubits)
 
-        workspace = np.ndarray((2, circ.dimension), dtype=np.cfloat)
+        workspace = np.ndarray((2, circ.dimension), dtype=np.complex128)
         state = v_mul_vec(circ, result["thetas"], state, state, workspace)
         return state
 

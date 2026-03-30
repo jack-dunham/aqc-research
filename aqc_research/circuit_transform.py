@@ -285,7 +285,7 @@ def ansatz_to_numpy_fast(circ: ParametricCircuit, thetas: np.ndarray) -> np.ndar
     """
     assert isinstance(circ, ParametricCircuit)
     assert chk.float_1d(thetas)
-    mat = np.eye(circ.dimension, dtype=np.cfloat)
+    mat = np.eye(circ.dimension, dtype=np.complex128)
     return v_mul_mat(circ, thetas, mat, workspace=np.zeros_like(mat))
 
 
