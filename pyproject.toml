@@ -32,7 +32,7 @@ dynamic = ["version", "description"]
 requires-python = ">=3.8"
 dependencies = [
     "qiskit",
-    "numpy >= 1.17,<2",
+    "numpy >= 1.17",
     "scipy >= 1.5",
     "matplotlib >= 3.3",
     "joblib",
